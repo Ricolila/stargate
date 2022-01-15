@@ -102,7 +102,7 @@ MULTIFX10_ITEMS = [
 class MultiFX10:
     def __init__(
         self,
-        a_title,
+        mfx_index,
         a_port_k1,
         a_rel_callback,
         a_val_callback,
@@ -113,11 +113,11 @@ class MultiFX10:
         fixed_height=False,
         fixed_width=False,
     ):
+        self.mfx_index = mfx_index
         self.group_box = QGroupBox()
         self.group_box.contextMenuEvent = self.contextMenuEvent
         self.group_box.setObjectName("plugin_groupbox")
-        if a_title is not None:
-            self.group_box.setTitle(str(a_title))
+        self.group_box.setTitle(f'FX{mfx_index + 1}')
         self.layout = QGridLayout()
         self.layout.setContentsMargins(3, 3, 3, 3)
         #self.layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -151,10 +151,22 @@ class MultiFX10:
             )
         for knob in self.knobs:
             knob.control.hide()
-        self.combobox = NestedComboboxControl(
+        self.route_combobox = combobox_control(
+            64,
+            "Route",
+            a_port_k1 + 10,
+            a_rel_callback,
+            a_val_callback,
+            [*(str(x) for x in range(mfx_index + 2, 11)), "Out"],
+            a_port_dict=a_port_dict,
+            a_default_index=0,
+            a_preset_mgr=a_preset_mgr,
+        )
+        self.route_combobox.add_to_grid_layout(self.layout, 0)
+        self.fx_type = NestedComboboxControl(
             132,
             "Type",
-            a_port_k1 + 3,
+            a_port_k1 + 11,
             a_rel_callback,
             a_val_callback,
             MULTIFX10_EFFECTS_LOOKUP,
@@ -163,11 +175,58 @@ class MultiFX10:
             a_preset_mgr=a_preset_mgr,
             a_default_index=0,
         )
-        self.combobox.control.currentIndexChanged_connect(
+        self.fx_type.control.currentIndexChanged_connect(
             self.type_combobox_changed,
         )
-        self.layout.addWidget(self.combobox.name_label, 0, 0)
-        self.layout.addWidget(self.combobox.control, 1, 0)
+        self.fx_type.add_to_grid_layout(self.layout, 1)
+        # self.layout.addWidget(self.fx_type.name_label, 0, 0)
+        # self.layout.addWidget(self.fx_type.control, 1, 0)
+
+        self.dry_knob = knob_control(
+            a_knob_size,
+            "",
+            a_port_k1 + 12,
+            a_rel_callback,
+            a_val_callback,
+            -400,
+            120,
+            0,
+            a_port_dict=a_port_dict,
+            a_preset_mgr=a_preset_mgr,
+            knob_kwargs=knob_kwargs,
+            min_text='-inf',
+        )
+        self.dry_knob.add_to_grid_layout(self.layout, 2)
+        self.wet_knob = knob_control(
+            a_knob_size,
+            "",
+            a_port_k1 + 13,
+            a_rel_callback,
+            a_val_callback,
+            -400,
+            120,
+            0,
+            a_port_dict=a_port_dict,
+            a_preset_mgr=a_preset_mgr,
+            knob_kwargs=knob_kwargs,
+            min_text='-inf',
+        )
+        self.wet_knob.add_to_grid_layout(self.layout, 3)
+        self.pan_knob = knob_control(
+            a_knob_size,
+            "",
+            a_port_k1 + 14,
+            a_rel_callback,
+            a_val_callback,
+            -100,
+            100,
+            0,
+            a_port_dict=a_port_dict,
+            a_preset_mgr=a_preset_mgr,
+            knob_kwargs=knob_kwargs,
+            min_text='-inf',
+        )
+        self.pan_knob.add_to_grid_layout(self.layout, 4)
 
     def wheel_event(self, a_event=None):
         pass
@@ -178,7 +237,7 @@ class MultiFX10:
         """
         for knob in self.knobs:
             knob.control.wheelEvent = self.wheel_event
-        self.combobox.control.wheelEvent = self.wheel_event
+        self.fx_type.control.wheelEvent = self.wheel_event
 
     def hide_knobs(self, index):
         for i in range(index):
@@ -232,7 +291,7 @@ class MultiFX10:
     def update_all_values(self):
         for f_knob in self.knobs:
             f_knob.control_value_changed(f_knob.get_value())
-        self.combobox.control_value_changed(self.combobox.get_value())
+        self.fx_type.control_value_changed(self.fx_type.get_value())
 
     def cut_settings(self):
         self.copy_settings()
@@ -246,12 +305,12 @@ class MultiFX10:
     def set_from_tuple(self, tpl):
         for i in range(len(self.knobs)):
             self.knobs[i].set_value(tpl[i])
-        self.combobox.set_value(tpl[-1])
+        self.fx_type.set_value(tpl[-1])
 
     def get_tuple(self) -> tuple:
         return (
             *(x.control.value() for x in self.knobs),
-            self.combobox.control.currentIndex(),
+            self.fx_type.control.currentIndex(),
         )
 
     def type_combobox_changed(self, a_val):
