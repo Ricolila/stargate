@@ -254,9 +254,9 @@ class NabuPluginUI(AbstractPluginUI):
         f_port = 4
         f_column = 0
         f_row = 0
-        for f_i in range(8):
+        for f_i in range(12):
             f_effect = MultiFXSingle(
-                "FX{}".format(f_i),
+                "FX{}".format(f_i + 1),
                 f_port,
                 self.plugin_rel_callback,
                 self.plugin_val_callback,
