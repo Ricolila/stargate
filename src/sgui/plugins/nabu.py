@@ -15,7 +15,6 @@ GNU General Public License for more details.
 
 from sgui.widgets import *
 from sglib.lib.translate import _
-from .util import get_screws
 
 
 NABU_FIRST_CONTROL_PORT = 4
@@ -150,28 +149,6 @@ QComboBox::down-arrow
     image: url({{ PLUGIN_ASSETS_DIR }}/drop-down.svg);
 }
 
-QWidget#left_logo {
-    background-color: qlineargradient(
-        x1: 0, y1: 0, x2: 1, y2: 1,
-        stop: 0 #040438, stop: 1 #060630
-    );
-    background-image: url({{ PLUGIN_ASSETS_DIR }}/nabu/logo-left.svg);
-    background-position: center;
-    background-repeat: no-repeat;
-    border: none;
-}
-
-QWidget#right_logo {
-    background-color: qlineargradient(
-        x1: 0, y1: 0, x2: 1, y2: 1,
-        stop: 0 #040438, stop: 1 #060630
-    );
-    background-image: url({{ PLUGIN_ASSETS_DIR }}/logo-right.svg);
-    background-position: center;
-    background-repeat: no-repeat;
-    border: none;
-}
-
 QMenu,
 QMenu::item {
     background-color: #222222;
@@ -215,15 +192,6 @@ class NabuPluginUI(AbstractPluginUI):
 
         self.main_hlayout = QHBoxLayout()
         self.layout.addLayout(self.main_hlayout)
-        left_screws = get_screws()
-        left_logo = QWidget()
-        left_logo.setObjectName("left_logo")
-        left_logo.setSizePolicy(
-            QSizePolicy.Policy.Minimum,
-            QSizePolicy.Policy.Minimum,
-        )
-        left_logo.setLayout(left_screws)
-        self.main_hlayout.addWidget(left_logo)
 
         self.main_vlayout = QVBoxLayout()
         self.main_hlayout.addLayout(self.main_vlayout)
@@ -235,15 +203,6 @@ class NabuPluginUI(AbstractPluginUI):
         )
         self.main_vlayout.addWidget(self.fx_tab)
 
-        right_screws = get_screws()
-        right_logo = QWidget()
-        right_logo.setObjectName("right_logo")
-        right_logo.setLayout(right_screws)
-        right_logo.setSizePolicy(
-            QSizePolicy.Policy.Minimum,
-            QSizePolicy.Policy.Minimum,
-        )
-        self.main_hlayout.addWidget(right_logo)
 
         self.fx_layout = QGridLayout()
         self.fx_hlayout = QHBoxLayout(self.fx_tab)
