@@ -19,24 +19,20 @@ GNU General Public License for more details.
 
 int NABU_AMORITIZER = 0;
 
-void v_nabu_cleanup(PluginHandle instance)
-{
+void v_nabu_cleanup(PluginHandle instance){
     free(instance);
 }
 
-void v_nabu_set_cc_map(PluginHandle instance, char * a_msg)
-{
+void v_nabu_set_cc_map(PluginHandle instance, char * a_msg){
     t_nabu *plugin = (t_nabu *)instance;
     v_generic_cc_map_set(&plugin->cc_map, a_msg);
 }
 
-void v_nabu_panic(PluginHandle instance)
-{
+void v_nabu_panic(PluginHandle instance){
     //t_nabu *plugin = (t_nabu*)instance;
 }
 
-void v_nabu_on_stop(PluginHandle instance)
-{
+void v_nabu_on_stop(PluginHandle instance){
     //t_nabu *plugin = (t_nabu*)instance;
 }
 
@@ -46,20 +42,14 @@ void v_nabu_connect_buffer(
     SGFLT * DataLocation,
     int a_is_sidechain
 ){
-    if(a_is_sidechain)
-    {
+    if(a_is_sidechain){
         return;
     }
     t_nabu *plugin = (t_nabu*)instance;
 
-    switch(a_index)
-    {
-        case 0:
-            plugin->output0 = DataLocation;
-            break;
-        case 1:
-            plugin->output1 = DataLocation;
-            break;
+    switch(a_index){
+        case 0: plugin->output0 = DataLocation; break;
+        case 1: plugin->output1 = DataLocation; break;
         default:
             sg_assert(
                 0,
@@ -170,15 +160,39 @@ void v_nabu_set_port_value(
 }
 
 void v_nabu_check_if_on(t_nabu *plugin_data){
-    int i, index;
+    int i, index, route;
+    int active_fx[NABU_FX_COUNT];
+    int routes[NABU_FX_COUNT];
+    t_nabu_mono_modules* mm = &plugin_data->mono_modules;
+    mm->routing_plan.active_fx_count = 0;
 
     for(i = 0; i < NABU_FX_COUNT; ++i){
         index = (int)(*(plugin_data->controls[i].type));
-        plugin_data->mono_modules.fx[i].fx_index = index;
-        plugin_data->mono_modules.fx[i].meta = mf10_get_meta(index);
+        route = (int)(*(plugin_data->controls[i].route)) + i + 1;
+        mm->fx[i].fx_index = index;
+        mm->fx[i].meta = mf10_get_meta(index);
+        routes[i] = route;
 
         if(index){
+            active_fx[i] = 1;
             plugin_data->is_on = 1;
+            mm->routing_plan.steps[mm->routing_plan.active_fx_count] =
+                &mm->fx[i];
+            ++mm->routing_plan.active_fx_count;
+        } else {
+            active_fx[i] = 0;
+        }
+    }
+
+    for(i = 0; i < mm->routing_plan.active_fx_count; ++i){
+        if(
+            routes[i] >= NABU_FX_COUNT
+            ||
+            active_fx[routes[i]] == 0
+        ){
+            mm->routing_plan.steps[i]->output = &mm->output;
+        } else {
+            mm->routing_plan.steps[i]->output = &mm->fx[routes[i]].input;
         }
     }
 }
@@ -225,6 +239,7 @@ void v_nabu_run(
     t_nabu_mono_modules* mm = &plugin_data->mono_modules;
     t_mf10_multi * f_fx;
     struct MIDIEvent* midi_event;
+    struct NabuMonoCluster* step;
 
     t_seq_event **events = (t_seq_event**)midi_events->data;
     int event_count = midi_events->len;
@@ -237,8 +252,7 @@ void v_nabu_run(
         v_nabu_process_midi_event(plugin_data, events[event_pos]);
     }
 
-    int f_i = 0;
-    int i;
+    int f_i, i;
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
 
@@ -263,9 +277,9 @@ void v_nabu_run(
     }
 
     if(plugin_data->is_on){
-        int i_mono_out = 0;
+        int i_mono_out;
 
-        while(i_mono_out < sample_count){
+        for(i_mono_out = 0; i_mono_out < sample_count; ++i_mono_out){
             midi_event = &plugin_data->midi_events[midi_event_pos];
             while(
                 midi_event_pos < plugin_data->midi_event_count
@@ -286,43 +300,48 @@ void v_nabu_run(
             v_plugin_event_queue_atm_set(
                 &plugin_data->atm_queue,
                 i_mono_out,
-                plugin_data->port_table)
-            ;
+                plugin_data->port_table
+            );
 
-            mm->current_sample0 = plugin_data->output0[(i_mono_out)];
-            mm->current_sample1 = plugin_data->output1[(i_mono_out)];
-
-            for(f_i = 0; f_i < NABU_FX_COUNT; ++f_i){
-                if(mm->fx[f_i].fx_index){
-                    f_fx = &mm->fx[f_i].mf10;
-                    for(i = 0; i < mm->fx[f_i].meta.knob_count; ++i){
-                        v_sml_run(
-                            &mm->fx[f_i].smoothers[i],
-                            *plugin_data->controls[f_i].knobs[i]
-                        );
-                    }
-
-                    v_mf10_set_from_smoothers(
-                        f_fx,
-                        mm->fx[f_i].smoothers,
-                        mm->fx[f_i].meta.knob_count
-                    );
-
-                    mm->fx[f_i].meta.run(
-                        f_fx,
-                        mm->current_sample0,
-                        mm->current_sample1
-                    );
-
-                    plugin_data->mono_modules.current_sample0 = f_fx->output0;
-                    plugin_data->mono_modules.current_sample1 = f_fx->output1;
-                }
+            // Pass in the input buffer to the first plugin
+            // TODO: Frequency splitting here
+            step = mm->routing_plan.steps[0];
+            step->input.left = plugin_data->output0[i_mono_out];
+            step->input.right = plugin_data->output1[i_mono_out];
+            for(f_i = 1; f_i < mm->routing_plan.active_fx_count; ++f_i){
+                step = mm->routing_plan.steps[f_i];
+                step->input.left = 0.0;
+                step->input.right = 0.0;
             }
 
-            plugin_data->output0[i_mono_out] = mm->current_sample0;
-            plugin_data->output1[i_mono_out] = mm->current_sample1;
+            for(f_i = 0; f_i < mm->routing_plan.active_fx_count; ++f_i){
+                step = mm->routing_plan.steps[f_i];
+                f_fx = &step->mf10;
+                for(i = 0; i < step->meta.knob_count; ++i){
+                    v_sml_run(
+                        &step->smoothers[i],
+                        *plugin_data->controls[f_i].knobs[i]
+                    );
+                }
 
-            ++i_mono_out;
+                v_mf10_set_from_smoothers(
+                    f_fx,
+                    mm->fx[f_i].smoothers,
+                    mm->fx[f_i].meta.knob_count
+                );
+
+                step->meta.run(
+                    f_fx,
+                    step->input.left,
+                    step->input.right
+                );
+
+                step->output->left = f_fx->output0;
+                step->output->right = f_fx->output1;
+            }
+
+            plugin_data->output0[i_mono_out] = mm->output.left;
+            plugin_data->output1[i_mono_out] = mm->output.right;
         }
     }
 }

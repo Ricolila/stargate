@@ -50,17 +50,21 @@ GNU General Public License for more details.
 struct NabuMonoCluster {
     int fx_index;
     struct MultiFX10MetaData meta;
-    t_smoother_linear smoothers[NABU_KNOBS_PER_FX];
     struct SamplePair input;
+    t_smoother_linear smoothers[NABU_KNOBS_PER_FX];
     t_mf10_multi mf10;
     struct SamplePair* output;
 };
 
+struct NabuRoutingPlan {
+    int active_fx_count;
+    struct NabuMonoCluster* steps[NABU_FX_COUNT];
+};
+
 typedef struct {
     struct NabuMonoCluster fx[NABU_FX_COUNT];
-
-    SGFLT current_sample0;
-    SGFLT current_sample1;
+    struct NabuRoutingPlan routing_plan;
+    struct SamplePair output;
 } t_nabu_mono_modules;
 
 struct NabuFXData {
