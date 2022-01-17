@@ -50,8 +50,10 @@ GNU General Public License for more details.
 struct NabuMonoCluster {
     int fx_index;
     struct MultiFX10MetaData meta;
-    t_mf10_multi mf10;
     t_smoother_linear smoothers[NABU_KNOBS_PER_FX];
+    struct SamplePair input;
+    t_mf10_multi mf10;
+    struct SamplePair* output;
 };
 
 typedef struct {
@@ -83,10 +85,7 @@ typedef struct {
     int i_slow_index;
     int is_on;
 
-    int midi_event_types[200];
-    int midi_event_ticks[200];
-    SGFLT midi_event_values[200];
-    int midi_event_ports[200];
+    struct MIDIEvent midi_events[200];
     int midi_event_count;
     t_plugin_event_queue atm_queue;
     int plugin_uid;

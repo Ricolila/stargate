@@ -170,12 +170,12 @@ void v_nabu_set_port_value(
 }
 
 void v_nabu_check_if_on(t_nabu *plugin_data){
-    int f_i, index;
+    int i, index;
 
-    for(f_i = 0; f_i < NABU_FX_COUNT; ++f_i){
-        index = (int)(*(plugin_data->controls[f_i].type));
-        plugin_data->mono_modules.fx[f_i].fx_index = index;
-        plugin_data->mono_modules.fx[f_i].meta = mf10_get_meta(index);
+    for(i = 0; i < NABU_FX_COUNT; ++i){
+        index = (int)(*(plugin_data->controls[i].type));
+        plugin_data->mono_modules.fx[i].fx_index = index;
+        plugin_data->mono_modules.fx[i].meta = mf10_get_meta(index);
 
         if(index){
             plugin_data->is_on = 1;
@@ -187,35 +187,27 @@ void v_nabu_process_midi_event(
     t_nabu * plugin_data,
     t_seq_event * a_event
 ){
-    if (a_event->type == EVENT_CONTROLLER)
-    {
+    struct MIDIEvent* midi_event;
+    if (a_event->type == EVENT_CONTROLLER){
         sg_assert(
             a_event->param >= 1 && a_event->param < 128,
             "v_nabu_process_midi_event: param %i out of range 1 to 128",
             a_event->param
         );
 
-        plugin_data->midi_event_types[plugin_data->midi_event_count] =
-                EVENT_CONTROLLER;
-        plugin_data->midi_event_ticks[plugin_data->midi_event_count] =
-                a_event->tick;
-        plugin_data->midi_event_ports[plugin_data->midi_event_count] =
-                a_event->param;
-        plugin_data->midi_event_values[plugin_data->midi_event_count] =
-                a_event->value;
+        midi_event = &plugin_data->midi_events[plugin_data->midi_event_count];
+        midi_event->type = EVENT_CONTROLLER;
+        midi_event->tick = a_event->tick;
+        midi_event->port = a_event->param;
+        midi_event->value = a_event->value;
 
-        if(!plugin_data->is_on)
-        {
+        if(!plugin_data->is_on){
             v_nabu_check_if_on(plugin_data);
 
             //Meaning that we now have set the port anyways because the
             //main loop won't be running
-            if(!plugin_data->is_on)
-            {
-                plugin_data->port_table[plugin_data->midi_event_ports[
-                        plugin_data->midi_event_count]] =
-                        plugin_data->midi_event_values[
-                        plugin_data->midi_event_count];
+            if(!plugin_data->is_on){
+                plugin_data->port_table[midi_event->port] = midi_event->value;
             }
         }
 
@@ -232,6 +224,7 @@ void v_nabu_run(
     t_nabu *plugin_data = (t_nabu*)instance;
     t_nabu_mono_modules* mm = &plugin_data->mono_modules;
     t_mf10_multi * f_fx;
+    struct MIDIEvent* midi_event;
 
     t_seq_event **events = (t_seq_event**)midi_events->data;
     int event_count = midi_events->len;
@@ -273,21 +266,18 @@ void v_nabu_run(
         int i_mono_out = 0;
 
         while(i_mono_out < sample_count){
+            midi_event = &plugin_data->midi_events[midi_event_pos];
             while(
                 midi_event_pos < plugin_data->midi_event_count
                 &&
-                plugin_data->midi_event_ticks[midi_event_pos] == i_mono_out
+                midi_event->tick == i_mono_out
             ){
-                if(
-                    plugin_data->midi_event_types[midi_event_pos]
-                    ==
-                    EVENT_CONTROLLER
-                ){
+                if(midi_event->type == EVENT_CONTROLLER){
                     v_cc_map_translate(
                         &plugin_data->cc_map, plugin_data->descriptor,
                         plugin_data->port_table,
-                        plugin_data->midi_event_ports[midi_event_pos],
-                        plugin_data->midi_event_values[midi_event_pos]
+                        midi_event->port,
+                        midi_event->value
                     );
                 }
                 ++midi_event_pos;

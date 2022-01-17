@@ -27,6 +27,13 @@ typedef struct _PluginPortRangeHint {
 
 typedef void * PluginHandle;
 
+struct MIDIEvent {
+    int type;
+    int tick;
+    int port;
+    SGFLT value;
+};
+
 // MIDI event
 typedef struct {
     int type;
