@@ -40,6 +40,12 @@ GNU General Public License for more details.
 
 /*BIG TODO:  Add a function to modify for the modulation sources*/
 
+struct MultiFX10MetaData {
+    fp_mf10_run run;
+    fp_mf10_reset reset;
+    int knob_count;
+};
+
 typedef struct {
     int effect_index;
     int channels;  //Currently only 1 or 2 are supported
@@ -122,7 +128,7 @@ void mf10_transform_svf_filter(t_mf10_multi*);
 
 t_mf10_multi * g_mf10_get(SGFLT);
 void v_mf10_free(t_mf10_multi*);
-fp_mf10_run g_mf10_get_function_pointer( int);
+struct MultiFXMetaData mf10_get_meta(int);
 
 //const fp_mf10_run mf10_function_pointers[MULTIFX10KNOB_FX_COUNT];
 
@@ -135,11 +141,6 @@ void g_mf10_init(
     SGFLT a_sample_rate,
     int a_huge_pages
 );
-
-/*A function pointer for switching between effect types*/
-//const fp_mf10_reset mf10_reset_function_pointers[MULTIFX10KNOB_FX_COUNT];
-
-fp_mf10_reset g_mf10_get_reset_function_pointer(int a_fx_index);
 
 #endif /* MULTIFX10KNOB_H */
 

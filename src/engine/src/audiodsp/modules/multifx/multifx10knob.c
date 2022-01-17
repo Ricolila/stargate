@@ -16,12 +16,6 @@
 #include "audiodsp/modules/signal_routing/amp_and_panner.h"
 #include "audiodsp/modules/signal_routing/audio_xfade.h"
 
-struct MultiFX10MetaData {
-    fp_mf10_run run;
-    fp_mf10_reset reset;
-    int knob_count;
-};
-
 SG_THREAD_LOCAL const struct MultiFX10MetaData
 MULTIFX10_METADATA[MULTIFX10KNOB_FX_COUNT] = {
     {
@@ -226,14 +220,8 @@ void v_mf10_reset_dc_offset(t_mf10_multi* self){
 
 /* void v_mf10_set(t_fx3_multi* self, int a_fx_index)
  */
-fp_mf10_run g_mf10_get_function_pointer(int a_fx_index){
-    return MULTIFX10_METADATA[a_fx_index].run;
-}
-
-/* void v_mf10_set(t_fx3_multi* self, int a_fx_index)
- */
-fp_mf10_reset g_mf10_get_reset_function_pointer(int a_fx_index){
-    return MULTIFX10_METADATA[a_fx_index].reset;
+struct MultiFX10MetaData g_mf10_get_meta(int a_fx_index){
+    return MULTIFX10_METADATA[a_fx_index];
 }
 
 

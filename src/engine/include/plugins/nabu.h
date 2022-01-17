@@ -27,71 +27,55 @@ GNU General Public License for more details.
 #include "audiodsp/modules/filter/svf.h"
 #include "audiodsp/modules/modulation/env_follower.h"
 #include "audiodsp/modules/modulation/gate.h"
-#include "audiodsp/modules/multifx/multifx3knob.h"
+#include "audiodsp/modules/multifx/multifx10knob.h"
 #include "plugin.h"
 #include "compiler.h"
 
 
+#define NABU_FX_COUNT 12
+// This is only the knobs available to use in effects, not dray/wet, pan, etc..
+#define NABU_KNOBS_PER_FX 10
+// All types of controls
+#define NABU_CONTROLS_PER_FX 15
 #define NABU_SLOW_INDEX_ITERATIONS 30
 
 #define NABU_FIRST_CONTROL_PORT 4
-#define NABU_FX0_KNOB0  4
-#define NABU_FX0_KNOB1  5
-#define NABU_FX0_KNOB2  6
-#define NABU_FX0_COMBOBOX 7
-#define NABU_FX1_KNOB0  8
-#define NABU_FX1_KNOB1  9
-#define NABU_FX1_KNOB2  10
-#define NABU_FX1_COMBOBOX 11
-#define NABU_FX2_KNOB0  12
-#define NABU_FX2_KNOB1  13
-#define NABU_FX2_KNOB2  14
-#define NABU_FX2_COMBOBOX 15
-#define NABU_FX3_KNOB0  16
-#define NABU_FX3_KNOB1  17
-#define NABU_FX3_KNOB2  18
-#define NABU_FX3_COMBOBOX 19
-#define NABU_FX4_KNOB0  20
-#define NABU_FX4_KNOB1  21
-#define NABU_FX4_KNOB2  22
-#define NABU_FX4_COMBOBOX 23
-#define NABU_FX5_KNOB0  24
-#define NABU_FX5_KNOB1  25
-#define NABU_FX5_KNOB2  26
-#define NABU_FX5_COMBOBOX 27
-#define NABU_FX6_KNOB0  28
-#define NABU_FX6_KNOB1  29
-#define NABU_FX6_KNOB2  30
-#define NABU_FX6_COMBOBOX 31
-#define NABU_FX7_KNOB0  32
-#define NABU_FX7_KNOB1  33
-#define NABU_FX7_KNOB2  34
-#define NABU_FX7_COMBOBOX 35
 
-#define NABU_LAST_CONTROL_PORT 35
+#define NABU_LAST_CONTROL_PORT \
+    (NABU_FIRST_CONTROL_PORT + (NABU_FX_COUNT * NABU_CONTROLS_PER_FX) - 1)
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define NABU_PORT_COUNT 36
+#define NABU_PORT_COUNT 184
+
+struct NabuMonoCluster {
+    int fx_index;
+    MultiFX10MetaData meta;
+    t_mf10_multi mf10;
+    t_smoother_linear smoothers[NABU_KNOBS_PER_FX];
+};
 
 typedef struct {
-    t_mf3_multi multieffect[8];
-    fp_mf3_run fx_func_ptr[8];
+    NabuMonoCluster fx[NABU_FX_COUNT];
 
     SGFLT current_sample0;
     SGFLT current_sample1;
-
-    t_smoother_linear smoothers[8][3];
 } t_nabu_mono_modules;
+
+typedef struct NabuFXData {
+    PluginData* knobs[NABU_KNOBS_PER_FX];
+    PluginData* dry;
+    PluginData* wet;
+    PluginData* pan;
+    PluginData* type;
+    PluginData* route;
+};
 
 typedef struct {
     char pad1[CACHE_LINE_SIZE];
     PluginData *output0;
     PluginData *output1;
 
-    PluginData *fx_knob0[8];
-    PluginData *fx_knob1[8];
-    PluginData *fx_knob2[8];
-    PluginData *fx_combobox[8];
+    struct NabuFXData controls[NABU_FX_COUNT];
 
     SGFLT fs;
     t_nabu_mono_modules mono_modules;

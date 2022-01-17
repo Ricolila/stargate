@@ -73,54 +73,35 @@ void v_nabu_connect_buffer(
 void v_nabu_connect_port(
     PluginHandle instance,
     int port,
-    PluginData * data
+    PluginData* data
 ){
-    t_nabu *plugin;
+    t_nabu* plugin = (t_nabu*)instance;
+    int fx_num, fx_port, norm_port;
 
-    plugin = (t_nabu*) instance;
-
-    switch (port)
-    {
-        case NABU_FX0_KNOB0: plugin->fx_knob0[0] = data; break;
-        case NABU_FX0_KNOB1: plugin->fx_knob1[0] = data; break;
-        case NABU_FX0_KNOB2: plugin->fx_knob2[0] = data; break;
-        case NABU_FX0_COMBOBOX: plugin->fx_combobox[0] = data; break;
-
-        case NABU_FX1_KNOB0: plugin->fx_knob0[1] = data; break;
-        case NABU_FX1_KNOB1: plugin->fx_knob1[1] = data; break;
-        case NABU_FX1_KNOB2: plugin->fx_knob2[1] = data; break;
-        case NABU_FX1_COMBOBOX: plugin->fx_combobox[1] = data; break;
-
-        case NABU_FX2_KNOB0: plugin->fx_knob0[2] = data; break;
-        case NABU_FX2_KNOB1: plugin->fx_knob1[2] = data; break;
-        case NABU_FX2_KNOB2: plugin->fx_knob2[2] = data; break;
-        case NABU_FX2_COMBOBOX: plugin->fx_combobox[2] = data; break;
-
-        case NABU_FX3_KNOB0: plugin->fx_knob0[3] = data; break;
-        case NABU_FX3_KNOB1: plugin->fx_knob1[3] = data; break;
-        case NABU_FX3_KNOB2: plugin->fx_knob2[3] = data; break;
-        case NABU_FX3_COMBOBOX: plugin->fx_combobox[3] = data; break;
-
-        case NABU_FX4_KNOB0: plugin->fx_knob0[4] = data; break;
-        case NABU_FX4_KNOB1: plugin->fx_knob1[4] = data; break;
-        case NABU_FX4_KNOB2: plugin->fx_knob2[4] = data; break;
-        case NABU_FX4_COMBOBOX: plugin->fx_combobox[4] = data; break;
-
-        case NABU_FX5_KNOB0: plugin->fx_knob0[5] = data; break;
-        case NABU_FX5_KNOB1: plugin->fx_knob1[5] = data; break;
-        case NABU_FX5_KNOB2: plugin->fx_knob2[5] = data; break;
-        case NABU_FX5_COMBOBOX: plugin->fx_combobox[5] = data; break;
-
-        case NABU_FX6_KNOB0: plugin->fx_knob0[6] = data; break;
-        case NABU_FX6_KNOB1: plugin->fx_knob1[6] = data; break;
-        case NABU_FX6_KNOB2: plugin->fx_knob2[6] = data; break;
-        case NABU_FX6_COMBOBOX: plugin->fx_combobox[6] = data; break;
-
-        case NABU_FX7_KNOB0: plugin->fx_knob0[7] = data; break;
-        case NABU_FX7_KNOB1: plugin->fx_knob1[7] = data; break;
-        case NABU_FX7_KNOB2: plugin->fx_knob2[7] = data; break;
-        case NABU_FX7_COMBOBOX: plugin->fx_combobox[7] = data; break;
+    if(port >= NABU_FIRST_CONTROL_PORT && port <= NABU_LAST_CONTROL_PORT){
+        norm_port = (port - NABU_FIRST_CONTROL_PORT);
+        fx_num = norm_port / NABU_CONTROLS_PER_FX;
+        fx_port = norm_port % NABU_CONTROLS_PER_FX;
+        if(fx_port < NABU_KNOBS_PER_FX){
+            plugin->controls[fx_num].knobs[fx_port] = data;
+        } else if(fx_port == 10){
+            plugin->controls[fx_num].route = data;
+        } else if(fx_port == 11){
+            plugin->controls[fx_num].type = data;
+        } else if(fx_port == 12){
+            plugin->controls[fx_num].dry = data;
+        } else if(fx_port == 13){
+            plugin->controls[fx_num].wet = data;
+        } else if(fx_port == 14){
+            plugin->controls[fx_num].pan = data;
+        } else {
+            sg_abort("Nabu: Port %i has invalid fx_port: %i", port, fx_port);
+        }
+        return;
     }
+
+    //switch (port){
+    //}
 }
 
 PluginHandle g_nabu_instantiate(
@@ -191,16 +172,17 @@ void v_nabu_set_port_value(
 }
 
 void v_nabu_check_if_on(t_nabu *plugin_data){
-    int f_i;
+    int f_i, index;
 
-    for(f_i = 0; f_i < 8; ++f_i){
-        plugin_data->mono_modules.fx_func_ptr[f_i] =
-            g_mf3_get_function_pointer(
-                (int)(*(plugin_data->fx_combobox[f_i]))
-            );
+    for(f_i = 0; f_i < NABU_FX_COUNT; ++f_i){
+        index = (int)(*(plugin_data->fx_combobox[f_i]));
+        plugin_data->mono_modules.fx[f_i].index = index;
+        plugin_data->mono_modules.fx[f_i].meta = mf10_get_meta(index);
 
-        if(plugin_data->mono_modules.fx_func_ptr[f_i] != v_mf3_run_off){
+        if(plugin_data->mono_modules.fx[f_i].func_ptr != v_mf10_run_off){
             plugin_data->is_on = 1;
+        } else {
+            plugin_data->is_on = 0;
         }
     }
 }
@@ -252,7 +234,8 @@ void v_nabu_run(
     struct ShdsList *atm_events
 ){
     t_nabu *plugin_data = (t_nabu*)instance;
-    t_mf3_multi * f_fx;
+    t_nabu_mono_modules* mm = &plugin_data->mono_modules;
+    t_mf10_multi * f_fx;
 
     t_seq_event **events = (t_seq_event**)midi_events->data;
     int event_count = midi_events->len;
@@ -266,6 +249,7 @@ void v_nabu_run(
     }
 
     int f_i = 0;
+    int i;
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
 
@@ -316,32 +300,20 @@ void v_nabu_run(
                 plugin_data->port_table)
             ;
 
-            plugin_data->mono_modules.current_sample0 =
-                plugin_data->output0[(i_mono_out)];
-            plugin_data->mono_modules.current_sample1 =
-                plugin_data->output1[(i_mono_out)];
+            mm->current_sample0 = plugin_data->output0[(i_mono_out)];
+            mm->current_sample1 = plugin_data->output1[(i_mono_out)];
 
-            for(f_i = 0; f_i < 8; ++f_i){
-                if(
-                    plugin_data->mono_modules.fx_func_ptr[f_i]
-                    !=
-                    v_mf3_run_off
-                ){
-                    f_fx = &plugin_data->mono_modules.multieffect[f_i];
-                    v_sml_run(
-                        &plugin_data->mono_modules.smoothers[f_i][0],
-                        *plugin_data->fx_knob0[f_i]
-                    );
-                    v_sml_run(
-                        &plugin_data->mono_modules.smoothers[f_i][1],
-                        *plugin_data->fx_knob1[f_i]
-                    );
-                    v_sml_run(
-                        &plugin_data->mono_modules.smoothers[f_i][2],
-                        *plugin_data->fx_knob2[f_i]
-                    );
+            for(f_i = 0; f_i < NABU_FX_COUNT; ++f_i){
+                if(mm->fx[f_i].index){
+                    f_fx = &mm->fx[f_i].mf10;
+                    for(i = 0; i < mm->fx[f_i].meta.knob_count; ++i){
+                        v_sml_run(
+                            mm->fx[f_i].smoothers[i],
+                            *plugin_data->controls[f_i].knobs[i]
+                        );
+                    }
 
-                    v_mf3_set(
+                    v_mf10_set(
                         f_fx,
                         plugin_data->mono_modules.smoothers[f_i][0].last_value,
                         plugin_data->mono_modules.smoothers[f_i][1].last_value,
@@ -370,41 +342,55 @@ void v_nabu_run(
 }
 
 PluginDescriptor *nabu_plugin_descriptor(){
+    int i, j, port;
     PluginDescriptor *f_result = get_plugin_descriptor(NABU_PORT_COUNT);
 
-    set_plugin_port(f_result, NABU_FX0_KNOB0, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX0_KNOB1, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX0_KNOB2, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX0_COMBOBOX, 0.0f, 0.0f, MULTIFX3KNOB_MAX_INDEX);
-    set_plugin_port(f_result, NABU_FX1_KNOB0, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX1_KNOB1, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX1_KNOB2, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX1_COMBOBOX, 0.0f, 0.0f, MULTIFX3KNOB_MAX_INDEX);
-    set_plugin_port(f_result, NABU_FX2_KNOB0, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX2_KNOB1, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX2_KNOB2, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX2_COMBOBOX, 0.0f, 0.0f, MULTIFX3KNOB_MAX_INDEX);
-    set_plugin_port(f_result, NABU_FX3_KNOB0, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX3_KNOB1, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX3_KNOB2, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX3_COMBOBOX, 0.0f, 0.0f, MULTIFX3KNOB_MAX_INDEX);
-    set_plugin_port(f_result, NABU_FX4_KNOB0, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX4_KNOB1, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX4_KNOB2, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX4_COMBOBOX, 0.0f, 0.0f, MULTIFX3KNOB_MAX_INDEX);
-    set_plugin_port(f_result, NABU_FX5_KNOB0, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX5_KNOB1, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX5_KNOB2, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX5_COMBOBOX, 0.0f, 0.0f, MULTIFX3KNOB_MAX_INDEX);
-    set_plugin_port(f_result, NABU_FX6_KNOB0, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX6_KNOB1, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX6_KNOB2, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX6_COMBOBOX, 0.0f, 0.0f, MULTIFX3KNOB_MAX_INDEX);
-    set_plugin_port(f_result, NABU_FX7_KNOB0, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX7_KNOB1, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX7_KNOB2, 64.0f, 0.0f, 127.0f);
-    set_plugin_port(f_result, NABU_FX7_COMBOBOX, 0.0f, 0.0f, MULTIFX3KNOB_MAX_INDEX);
-
+    port = NABU_FIRST_CONTROL_PORT;
+    for(i = 0; i < NABU_FX_COUNT; ++i){
+        for(j = 0; j < 10; ++j){
+            set_plugin_port(f_result, port, 64.0f, 0.0f, 127.0f);
+            ++port;
+        }
+        set_plugin_port(
+            f_result,
+            port,  // Route
+            0.0,
+            0.0,
+            (SGFLT)(NABU_FX_COUNT - i + 1)
+        );
+        ++port;
+        set_plugin_port(
+            f_result,
+            port,  // Type
+            0.0f,
+            0.0f,
+            MULTIFX10KNOB_FX_COUNT
+        );
+        ++port;
+        set_plugin_port(
+            f_result,
+            port,  // Dry
+            0.0f,
+            -400.0,
+            120.
+        );
+        ++port;
+        set_plugin_port(
+            f_result,
+            port,  // Wet
+            0.0f,
+            -400.0,
+            120.
+        );
+        ++port;
+        set_plugin_port(
+            f_result,
+            port,  // Pan
+            0.0f,
+            -100.0,
+            100.
+        );
+    }
 
     f_result->cleanup = v_nabu_cleanup;
     f_result->connect_port = v_nabu_connect_port;
@@ -434,9 +420,9 @@ void v_nabu_mono_init(
     int f_i2;
 
     for(f_i = 0; f_i < 8; ++f_i){
-        g_mf3_init(&a_mono->multieffect[f_i], a_sr, 1);
-        a_mono->fx_func_ptr[f_i] = v_mf3_run_off;
-        for(f_i2 = 0; f_i2 < 3; ++f_i2){
+        g_mf10_init(&a_mono->multieffect[f_i], a_sr, 1);
+        a_mono->fx_func_ptr[f_i] = v_mf10_run_off;
+        for(f_i2 = 0; f_i2 < NABU_KNOBS_PER_FX; ++f_i2){
             g_sml_init(
                 &a_mono->smoothers[f_i][f_i2],
                 a_sr,
