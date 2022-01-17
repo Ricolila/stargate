@@ -127,11 +127,10 @@ PluginHandle g_nabu_instantiate(
     );
 
     plugin_data->i_slow_index =
-            NABU_SLOW_INDEX_ITERATIONS + NABU_AMORITIZER;
+        NABU_SLOW_INDEX_ITERATIONS + NABU_AMORITIZER;
 
     ++NABU_AMORITIZER;
-    if(NABU_AMORITIZER >= NABU_SLOW_INDEX_ITERATIONS)
-    {
+    if(NABU_AMORITIZER >= NABU_SLOW_INDEX_ITERATIONS){
         NABU_AMORITIZER = 0;
     }
 
@@ -143,7 +142,6 @@ PluginHandle g_nabu_instantiate(
     );
 
     v_cc_map_init(&plugin_data->cc_map);
-
     return (PluginHandle) plugin_data;
 }
 
@@ -181,8 +179,6 @@ void v_nabu_check_if_on(t_nabu *plugin_data){
 
         if(index){
             plugin_data->is_on = 1;
-        } else {
-            plugin_data->is_on = 0;
         }
     }
 }
@@ -390,6 +386,7 @@ PluginDescriptor *nabu_plugin_descriptor(){
             -100.0,
             100.
         );
+        ++port;
     }
 
     f_result->cleanup = v_nabu_cleanup;

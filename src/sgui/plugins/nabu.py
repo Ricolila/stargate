@@ -16,6 +16,7 @@ GNU General Public License for more details.
 from sgui.widgets import *
 from sglib.lib.translate import _
 
+NABU_FX_COUNT = 12
 
 NABU_FIRST_CONTROL_PORT = 4
 NABU_FX0_KNOB0 = 4
@@ -182,7 +183,8 @@ class NabuPluginUI(AbstractPluginUI):
         }
 
         self.preset_manager = preset_manager_widget(
-            self.get_plugin_name())
+            self.get_plugin_name(),
+        )
         self.presets_hlayout = QHBoxLayout()
         self.presets_hlayout.addWidget(self.preset_manager.group_box)
         self.presets_hlayout.addItem(
@@ -190,32 +192,28 @@ class NabuPluginUI(AbstractPluginUI):
         )
         self.spectrum_enabled = None
 
-        self.main_hlayout = QHBoxLayout()
-        self.layout.addLayout(self.main_hlayout)
-
-        self.main_vlayout = QVBoxLayout()
-        self.main_hlayout.addLayout(self.main_vlayout)
-        self.main_vlayout.addLayout(self.presets_hlayout)
-        self.fx_tab = QWidget()
-        self.fx_tab.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Expanding,
+        self.fx_scrollarea = QScrollArea()
+        self.fx_scrollarea.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn,
         )
-        self.main_vlayout.addWidget(self.fx_tab)
-
-
-        self.fx_layout = QGridLayout()
-        self.fx_hlayout = QHBoxLayout(self.fx_tab)
-        self.fx_hlayout.addLayout(self.fx_layout)
+        self.fx_scrollarea.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
+        )
+        self.fx_scrollarea.setWidgetResizable(True)
+        self.layout.addWidget(self.fx_scrollarea)
+        self.fx_scrollarea_widget = QWidget()
+        self.fx_layout = QVBoxLayout()
+        self.fx_scrollarea_widget.setLayout(self.fx_layout)
+        self.fx_scrollarea.setFixedHeight(500)
+        self.fx_scrollarea.setWidget(self.fx_scrollarea_widget)
 
         f_knob_size = 48
 
         f_port = 4
-        f_column = 0
-        f_row = 0
-        for f_i in range(12):
-            f_effect = MultiFXSingle(
-                "FX{}".format(f_i + 1),
+        for i in range(NABU_FX_COUNT):
+            f_effect = MultiFX10(
+                i,
+                NABU_FX_COUNT,
                 f_port,
                 self.plugin_rel_callback,
                 self.plugin_val_callback,
@@ -226,12 +224,8 @@ class NabuPluginUI(AbstractPluginUI):
                 fixed_height=True,
             )
             self.effects.append(f_effect)
-            self.fx_layout.addWidget(f_effect.group_box, f_row, f_column)
-            f_column += 1
-            if f_column > 1:
-                f_column = 0
-                f_row += 1
-            f_port += 4
+            self.fx_layout.addWidget(f_effect.group_box)
+            f_port += 15
 
         self.open_plugin_file()
         self.set_midi_learn(NABU_PORT_MAP)

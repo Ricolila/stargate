@@ -103,6 +103,7 @@ class MultiFX10:
     def __init__(
         self,
         mfx_index,
+        mfx_count,
         a_port_k1,
         a_rel_callback,
         a_val_callback,
@@ -157,7 +158,7 @@ class MultiFX10:
             a_port_k1 + 10,
             a_rel_callback,
             a_val_callback,
-            [*(str(x) for x in range(mfx_index + 2, 11)), "Out"],
+            [*(str(x) for x in range(mfx_index + 2, mfx_count + 1)), "Out"],
             a_port_dict=a_port_dict,
             a_default_index=0,
             a_preset_mgr=a_preset_mgr,
@@ -184,7 +185,7 @@ class MultiFX10:
 
         self.dry_knob = knob_control(
             a_knob_size,
-            "",
+            "Dry",
             a_port_k1 + 12,
             a_rel_callback,
             a_val_callback,
@@ -195,11 +196,12 @@ class MultiFX10:
             a_preset_mgr=a_preset_mgr,
             knob_kwargs=knob_kwargs,
             min_text='-inf',
+            a_val_conversion=_shared.KC_TENTH,
         )
         self.dry_knob.add_to_grid_layout(self.layout, 2)
         self.wet_knob = knob_control(
             a_knob_size,
-            "",
+            "Wet",
             a_port_k1 + 13,
             a_rel_callback,
             a_val_callback,
@@ -210,11 +212,12 @@ class MultiFX10:
             a_preset_mgr=a_preset_mgr,
             knob_kwargs=knob_kwargs,
             min_text='-inf',
+            a_val_conversion=_shared.KC_TENTH,
         )
         self.wet_knob.add_to_grid_layout(self.layout, 3)
         self.pan_knob = knob_control(
             a_knob_size,
-            "",
+            "Pan",
             a_port_k1 + 14,
             a_rel_callback,
             a_val_callback,
@@ -225,6 +228,7 @@ class MultiFX10:
             a_preset_mgr=a_preset_mgr,
             knob_kwargs=knob_kwargs,
             min_text='-inf',
+            a_val_conversion=_shared.KC_DECIMAL,
         )
         self.pan_knob.add_to_grid_layout(self.layout, 4)
 
