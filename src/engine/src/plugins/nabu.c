@@ -419,7 +419,7 @@ void v_nabu_mono_init(
     int f_i;
     int f_i2;
 
-    for(f_i = 0; f_i < 8; ++f_i){
+    for(f_i = 0; f_i < NABU_FX_COUNT; ++f_i){
         g_mf10_init(&a_mono->fx[f_i].mf10, a_sr, 1);
         a_mono->fx[f_i].fx_index = 0;
         a_mono->fx[f_i].meta.run = v_mf10_run_off;
