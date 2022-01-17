@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #define MULTIFX10KNOB_KNOB_COUNT 10
 
 #include "audiodsp/lib/amp.h"
+#include "audiodsp/lib/smoother-linear.h"
 #include "audiodsp/modules/delay/chorus.h"
 #include "audiodsp/modules/distortion/clipper.h"
 #include "audiodsp/modules/distortion/foldback.h"
@@ -39,12 +40,6 @@ GNU General Public License for more details.
 #include "compiler.h"
 
 /*BIG TODO:  Add a function to modify for the modulation sources*/
-
-struct MultiFX10MetaData {
-    fp_mf10_run run;
-    fp_mf10_reset reset;
-    int knob_count;
-};
 
 typedef struct {
     int effect_index;
@@ -76,12 +71,25 @@ typedef struct {
     t_soft_clipper soft_clipper;
 } t_mf10_multi;
 
+typedef void (*fp_mf10_run)(t_mf10_multi*,SGFLT,SGFLT);
 typedef void (*fp_mf10_reset)(t_mf10_multi*);
 
-/*A function pointer for switching between effect types*/
-typedef void (*fp_mf10_run)(t_mf10_multi*,SGFLT,SGFLT);
+struct MultiFX10MetaData {
+    fp_mf10_run run;
+    fp_mf10_reset reset;
+    int knob_count;
+};
 
-void v_mf10_set(t_mf10_multi*,SGFLT,SGFLT,SGFLT);
+void v_mf10_set(
+    t_mf10_multi*,
+    SGFLT[MULTIFX10KNOB_KNOB_COUNT],
+    int
+);
+void v_mf10_set_from_smoothers(
+    t_mf10_multi*,
+    t_smoother_linear smoothers[MULTIFX10KNOB_KNOB_COUNT],
+    int
+);
 void v_mf10_mod(t_mf10_multi*,SGFLT,SGFLT,SGFLT,SGFLT);
 void v_mf10_mod_single(t_mf10_multi*,SGFLT,SGFLT, int);
 void v_mf10_commit_mod(t_mf10_multi*);
@@ -128,7 +136,7 @@ void mf10_transform_svf_filter(t_mf10_multi*);
 
 t_mf10_multi * g_mf10_get(SGFLT);
 void v_mf10_free(t_mf10_multi*);
-struct MultiFXMetaData mf10_get_meta(int);
+struct MultiFX10MetaData mf10_get_meta(int);
 
 //const fp_mf10_run mf10_function_pointers[MULTIFX10KNOB_FX_COUNT];
 

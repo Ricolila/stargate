@@ -49,19 +49,19 @@ GNU General Public License for more details.
 
 struct NabuMonoCluster {
     int fx_index;
-    MultiFX10MetaData meta;
+    struct MultiFX10MetaData meta;
     t_mf10_multi mf10;
     t_smoother_linear smoothers[NABU_KNOBS_PER_FX];
 };
 
 typedef struct {
-    NabuMonoCluster fx[NABU_FX_COUNT];
+    struct NabuMonoCluster fx[NABU_FX_COUNT];
 
     SGFLT current_sample0;
     SGFLT current_sample1;
 } t_nabu_mono_modules;
 
-typedef struct NabuFXData {
+struct NabuFXData {
     PluginData* knobs[NABU_KNOBS_PER_FX];
     PluginData* dry;
     PluginData* wet;

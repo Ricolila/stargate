@@ -218,26 +218,32 @@ void v_mf10_reset_dc_offset(t_mf10_multi* self){
     v_dco_reset(&self->dc_offset[1]);
 }
 
-/* void v_mf10_set(t_fx3_multi* self, int a_fx_index)
- */
-struct MultiFX10MetaData g_mf10_get_meta(int a_fx_index){
-    return MULTIFX10_METADATA[a_fx_index];
+struct MultiFX10MetaData mf10_get_meta(int index){
+    return MULTIFX10_METADATA[index];
 }
-
 
 void v_mf10_set(
     t_mf10_multi* self,
-    SGFLT a_control0,
-    SGFLT a_control1,
-    SGFLT a_control2
+    SGFLT controls[MULTIFX10KNOB_KNOB_COUNT],
+    int knob_count
 ){
-    self->control[0] = a_control0;
-    self->control[1] = a_control1;
-    self->control[2] = a_control2;
+    int i;
+    for(i = 0; i < knob_count; ++i){
+        self->control[i] = controls[i];
+        self->mod_value[i] = 0.0f;
+    }
+}
 
-    self->mod_value[0] = 0.0f;
-    self->mod_value[1] = 0.0f;
-    self->mod_value[2] = 0.0f;
+void v_mf10_set_from_smoothers(
+    t_mf10_multi* self,
+    t_smoother_linear smoothers[MULTIFX10KNOB_KNOB_COUNT],
+    int knob_count
+){
+    int i;
+    for(i = 0; i < knob_count; ++i){
+        self->control[i] = smoothers[i].last_value;
+        self->mod_value[i] = 0.0f;
+    }
 }
 
 /* void v_mf10_mod(t_mf10_multi* self,

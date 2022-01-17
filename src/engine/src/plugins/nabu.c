@@ -175,11 +175,11 @@ void v_nabu_check_if_on(t_nabu *plugin_data){
     int f_i, index;
 
     for(f_i = 0; f_i < NABU_FX_COUNT; ++f_i){
-        index = (int)(*(plugin_data->fx_combobox[f_i]));
-        plugin_data->mono_modules.fx[f_i].index = index;
+        index = (int)(*(plugin_data->controls[f_i].type));
+        plugin_data->mono_modules.fx[f_i].fx_index = index;
         plugin_data->mono_modules.fx[f_i].meta = mf10_get_meta(index);
 
-        if(plugin_data->mono_modules.fx[f_i].func_ptr != v_mf10_run_off){
+        if(index){
             plugin_data->is_on = 1;
         } else {
             plugin_data->is_on = 0;
@@ -276,20 +276,23 @@ void v_nabu_run(
     if(plugin_data->is_on){
         int i_mono_out = 0;
 
-        while((i_mono_out) < sample_count){
+        while(i_mono_out < sample_count){
             while(
                 midi_event_pos < plugin_data->midi_event_count
                 &&
                 plugin_data->midi_event_ticks[midi_event_pos] == i_mono_out
             ){
-                if(plugin_data->midi_event_types[midi_event_pos] ==
-                        EVENT_CONTROLLER)
-                {
+                if(
+                    plugin_data->midi_event_types[midi_event_pos]
+                    ==
+                    EVENT_CONTROLLER
+                ){
                     v_cc_map_translate(
                         &plugin_data->cc_map, plugin_data->descriptor,
                         plugin_data->port_table,
                         plugin_data->midi_event_ports[midi_event_pos],
-                        plugin_data->midi_event_values[midi_event_pos]);
+                        plugin_data->midi_event_values[midi_event_pos]
+                    );
                 }
                 ++midi_event_pos;
             }
@@ -304,26 +307,25 @@ void v_nabu_run(
             mm->current_sample1 = plugin_data->output1[(i_mono_out)];
 
             for(f_i = 0; f_i < NABU_FX_COUNT; ++f_i){
-                if(mm->fx[f_i].index){
+                if(mm->fx[f_i].fx_index){
                     f_fx = &mm->fx[f_i].mf10;
                     for(i = 0; i < mm->fx[f_i].meta.knob_count; ++i){
                         v_sml_run(
-                            mm->fx[f_i].smoothers[i],
+                            &mm->fx[f_i].smoothers[i],
                             *plugin_data->controls[f_i].knobs[i]
                         );
                     }
 
-                    v_mf10_set(
+                    v_mf10_set_from_smoothers(
                         f_fx,
-                        plugin_data->mono_modules.smoothers[f_i][0].last_value,
-                        plugin_data->mono_modules.smoothers[f_i][1].last_value,
-                        plugin_data->mono_modules.smoothers[f_i][2].last_value
+                        mm->fx[f_i].smoothers,
+                        mm->fx[f_i].meta.knob_count
                     );
 
-                    plugin_data->mono_modules.fx_func_ptr[f_i](
+                    mm->fx[f_i].meta.run(
                         f_fx,
-                        (plugin_data->mono_modules.current_sample0),
-                        (plugin_data->mono_modules.current_sample1)
+                        mm->current_sample0,
+                        mm->current_sample1
                     );
 
                     plugin_data->mono_modules.current_sample0 = f_fx->output0;
@@ -331,10 +333,8 @@ void v_nabu_run(
                 }
             }
 
-            plugin_data->output0[(i_mono_out)] =
-                    (plugin_data->mono_modules.current_sample0);
-            plugin_data->output1[(i_mono_out)] =
-                    (plugin_data->mono_modules.current_sample1);
+            plugin_data->output0[i_mono_out] = mm->current_sample0;
+            plugin_data->output1[i_mono_out] = mm->current_sample1;
 
             ++i_mono_out;
         }
@@ -420,11 +420,12 @@ void v_nabu_mono_init(
     int f_i2;
 
     for(f_i = 0; f_i < 8; ++f_i){
-        g_mf10_init(&a_mono->multieffect[f_i], a_sr, 1);
-        a_mono->fx_func_ptr[f_i] = v_mf10_run_off;
+        g_mf10_init(&a_mono->fx[f_i].mf10, a_sr, 1);
+        a_mono->fx[f_i].fx_index = 0;
+        a_mono->fx[f_i].meta.run = v_mf10_run_off;
         for(f_i2 = 0; f_i2 < NABU_KNOBS_PER_FX; ++f_i2){
             g_sml_init(
-                &a_mono->smoothers[f_i][f_i2],
+                &a_mono->fx[f_i].smoothers[f_i2],
                 a_sr,
                 127.0f,
                 0.0f,
