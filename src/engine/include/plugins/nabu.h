@@ -24,6 +24,7 @@ GNU General Public License for more details.
 #include "audiodsp/modules/delay/reverb.h"
 #include "audiodsp/modules/distortion/glitch_v2.h"
 #include "audiodsp/modules/filter/peak_eq.h"
+#include "audiodsp/modules/filter/splitter.h"
 #include "audiodsp/modules/filter/svf.h"
 #include "audiodsp/modules/modulation/env_follower.h"
 #include "audiodsp/modules/modulation/gate.h"
@@ -43,9 +44,12 @@ GNU General Public License for more details.
 
 #define NABU_LAST_CONTROL_PORT \
     (NABU_FIRST_CONTROL_PORT + (NABU_FX_COUNT * NABU_CONTROLS_PER_FX) - 1)
+
+#define NABU_FIRST_SPLITTER_PORT (NABU_LAST_CONTROL_PORT + 1)
+#define NABU_LAST_SPLITTER_PORT (NABU_FIRST_SPLITTER_PORT + 2 + (2 * 4) - 1)
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define NABU_PORT_COUNT 184
+#define NABU_PORT_COUNT (NABU_LAST_SPLITTER_PORT + 1)
 
 struct NabuMonoCluster {
     int fx_index;
@@ -62,10 +66,19 @@ struct NabuRoutingPlan {
 };
 
 typedef struct {
+    struct FreqSplitter splitter;
     struct NabuMonoCluster fx[NABU_FX_COUNT];
     struct NabuRoutingPlan routing_plan;
     struct SamplePair output;
 } t_nabu_mono_modules;
+
+struct NabuSplitterData {
+    PluginData* splits;
+    PluginData* type;
+    PluginData* res;
+    PluginData* output[4];
+    PluginData* freq[3];
+};
 
 struct NabuFXData {
     PluginData* knobs[NABU_KNOBS_PER_FX];
@@ -81,6 +94,7 @@ typedef struct {
     PluginData *output0;
     PluginData *output1;
 
+    struct NabuSplitterData splitter_controls;
     struct NabuFXData controls[NABU_FX_COUNT];
 
     SGFLT fs;

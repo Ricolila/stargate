@@ -88,10 +88,28 @@ void v_nabu_connect_port(
             sg_abort("Nabu: Port %i has invalid fx_port: %i", port, fx_port);
         }
         return;
+    } else if(
+        port >= NABU_FIRST_SPLITTER_PORT
+        &&
+        port <= NABU_LAST_SPLITTER_PORT
+    ){
+        norm_port = port - NABU_FIRST_SPLITTER_PORT;
+        switch(norm_port){
+            case 0: plugin->splitter_controls.splits = data; break;
+            case 1: plugin->splitter_controls.type = data; break;
+            case 2: plugin->splitter_controls.res = data; break;
+            case 3: plugin->splitter_controls.output[0] = data; break;
+            case 4: plugin->splitter_controls.freq[0] = data; break;
+            case 5: plugin->splitter_controls.output[1] = data; break;
+            case 6: plugin->splitter_controls.freq[1] = data; break;
+            case 7: plugin->splitter_controls.output[2] = data; break;
+            case 8: plugin->splitter_controls.freq[2] = data; break;
+            case 9: plugin->splitter_controls.output[3] = data; break;
+        };
+    } else {
+        sg_abort("Nabu: Port %i is invalid", port);
     }
 
-    //switch (port){
-    //}
 }
 
 PluginHandle g_nabu_instantiate(
@@ -398,6 +416,58 @@ PluginDescriptor *nabu_plugin_descriptor(){
         ++port;
     }
 
+    set_plugin_port(
+        f_result,
+        port,  // Splits
+        0.0f,
+        0.0,
+        3.0
+    );
+    ++port;
+    set_plugin_port(
+        f_result,
+        port,  // Type
+        0.0f,
+        0.0,
+        1.0
+    );
+    ++port;
+    set_plugin_port(
+        f_result,
+        port,  // Res
+        -120.0f,
+        -300.0,
+        -10.0
+    );
+    ++port;
+    set_plugin_port(
+        f_result,
+        port,  // Output
+        0.0f,
+        0.0,
+        13.
+    );
+    ++port;
+
+    for(i = 0; i < 3; ++i){
+        set_plugin_port(
+            f_result,
+            port,  // Freq
+            51. + (i * 24.),
+            30.0,
+            120.
+        );
+        ++port;
+        set_plugin_port(
+            f_result,
+            port,  // Output
+            0.0f,
+            0.0,
+            13.
+        );
+        ++port;
+    }
+
     f_result->cleanup = v_nabu_cleanup;
     f_result->connect_port = v_nabu_connect_port;
     f_result->connect_buffer = v_nabu_connect_buffer;
@@ -425,6 +495,7 @@ void v_nabu_mono_init(
     int f_i;
     int f_i2;
 
+    freq_splitter_init(&a_mono->splitter, a_sr);
     for(f_i = 0; f_i < NABU_FX_COUNT; ++f_i){
         g_mf10_init(&a_mono->fx[f_i].mf10, a_sr, 1);
         a_mono->fx[f_i].fx_index = 0;
