@@ -16,6 +16,7 @@ from .file_browser import (
 )
 from .file_select import file_select_widget
 from .filter import filter_widget
+from .freq_splitter import FreqSplitter
 from .knob import *
 from .lfo import lfo_widget
 from .lfo_dialog import lfo_dialog
