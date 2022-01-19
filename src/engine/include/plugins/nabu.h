@@ -34,6 +34,7 @@ GNU General Public License for more details.
 
 
 #define NABU_FX_COUNT 12
+#define NABU_MAIN_OUT NABU_FX_COUNT
 // This is only the knobs available to use in effects, not dray/wet, pan, etc..
 #define NABU_KNOBS_PER_FX 10
 // All types of controls

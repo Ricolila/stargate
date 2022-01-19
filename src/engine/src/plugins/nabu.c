@@ -199,7 +199,7 @@ void v_nabu_check_if_on(struct NabuPlugin* plugin_data){
 
     for(i = 0; i < mm->routing_plan.active_fx_count; ++i){
         if(
-            routes[i] >= NABU_FX_COUNT
+            routes[i] == NABU_MAIN_OUT
             ||
             active_fx[routes[i]] == 0
         ){
@@ -347,7 +347,7 @@ void v_nabu_run(
                 freq_splitter_run(&mm->splitter, splitter_input);
                 for(i = 0; i < splits + 1; ++i){
                     output = (int)(*plugin_data->splitter_controls.output[i]);
-                    if(output == 12){
+                    if(output == NABU_MAIN_OUT){
                         mm->output.left += mm->splitter.output[i][0];
                         mm->output.right += mm->splitter.output[i][1];
                     } else {
@@ -385,8 +385,8 @@ void v_nabu_run(
                     step->input.right
                 );
 
-                step->output->left = f_fx->output0;
-                step->output->right = f_fx->output1;
+                step->output->left += f_fx->output0;
+                step->output->right += f_fx->output1;
             }
 
             plugin_data->output0[i_mono_out] = mm->output.left;
