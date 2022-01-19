@@ -51,11 +51,7 @@ void v_nabu_connect_buffer(
         case 0: plugin->output0 = DataLocation; break;
         case 1: plugin->output1 = DataLocation; break;
         default:
-            sg_assert(
-                0,
-                "v_nabu_connect_buffer: unknown port %i",
-                a_index
-            );
+            sg_abort("v_nabu_connect_buffer: unknown port %i", a_index);
             break;
     }
 }
@@ -134,8 +130,7 @@ PluginHandle g_nabu_instantiate(
         plugin_data->plugin_uid
     );
 
-    plugin_data->i_slow_index =
-        NABU_SLOW_INDEX_ITERATIONS + NABU_AMORITIZER;
+    plugin_data->i_slow_index = NABU_SLOW_INDEX_ITERATIONS + NABU_AMORITIZER;
 
     ++NABU_AMORITIZER;
     if(NABU_AMORITIZER >= NABU_SLOW_INDEX_ITERATIONS){
@@ -150,7 +145,7 @@ PluginHandle g_nabu_instantiate(
     );
 
     v_cc_map_init(&plugin_data->cc_map);
-    return (PluginHandle) plugin_data;
+    return (PluginHandle)plugin_data;
 }
 
 void v_nabu_load(
@@ -251,18 +246,20 @@ void v_nabu_run(
     PluginHandle instance,
     int sample_count,
     struct ShdsList* midi_events,
-    struct ShdsList *atm_events
+    struct ShdsList* atm_events
 ){
     struct NabuPlugin* plugin_data = (struct NabuPlugin*)instance;
     struct NabuMonoModules* mm = &plugin_data->mono_modules;
     t_mf10_multi * f_fx;
     struct MIDIEvent* midi_event;
     struct NabuMonoCluster* step;
+    SGFLT splitter_input[2];
 
     t_seq_event **events = (t_seq_event**)midi_events->data;
     int event_count = midi_events->len;
 
     int event_pos;
+    int splits = (int)(*plugin_data->splitter_controls.splits);
     int midi_event_pos = 0;
     plugin_data->midi_event_count = 0;
 
@@ -296,6 +293,20 @@ void v_nabu_run(
 
     if(plugin_data->is_on){
         int i_mono_out;
+        SGFLT freqs[3] = {
+            *plugin_data->splitter_controls.freq[0],
+            *plugin_data->splitter_controls.freq[1],
+            *plugin_data->splitter_controls.freq[2],
+        };
+        if(splits){
+            freq_splitter_set(
+                &mm->splitter,
+                splits,
+                (int)(*plugin_data->splitter_controls.type),
+                (*plugin_data->splitter_controls.res) * 0.1,
+                freqs
+            );
+        }
 
         for(i_mono_out = 0; i_mono_out < sample_count; ++i_mono_out){
             midi_event = &plugin_data->midi_events[midi_event_pos];
@@ -321,15 +332,35 @@ void v_nabu_run(
                 plugin_data->port_table
             );
 
-            // Pass in the input buffer to the first plugin
-            // TODO: Frequency splitting here
-            step = mm->routing_plan.steps[0];
-            step->input.left = plugin_data->output0[i_mono_out];
-            step->input.right = plugin_data->output1[i_mono_out];
-            for(f_i = 1; f_i < mm->routing_plan.active_fx_count; ++f_i){
+            mm->output.left = 0.0;
+            mm->output.right = 0.0;
+            for(f_i = 0; f_i < mm->routing_plan.active_fx_count; ++f_i){
                 step = mm->routing_plan.steps[f_i];
                 step->input.left = 0.0;
                 step->input.right = 0.0;
+            }
+
+            if(splits){
+                int output;
+                splitter_input[0] = plugin_data->output0[i_mono_out];
+                splitter_input[1] = plugin_data->output1[i_mono_out];
+                freq_splitter_run(&mm->splitter, splitter_input);
+                for(i = 0; i < splits + 1; ++i){
+                    output = (int)(*plugin_data->splitter_controls.output[i]);
+                    if(output == 12){
+                        mm->output.left += mm->splitter.output[i][0];
+                        mm->output.right += mm->splitter.output[i][1];
+                    } else {
+                        mm->fx[output].input.left +=
+                            mm->splitter.output[i][0];
+                        mm->fx[output].input.right +=
+                            mm->splitter.output[i][1];
+                    }
+                }
+            } else {
+                step = mm->routing_plan.steps[0];
+                step->input.left = plugin_data->output0[i_mono_out];
+                step->input.right = plugin_data->output1[i_mono_out];
             }
 
             for(f_i = 0; f_i < mm->routing_plan.active_fx_count; ++f_i){
@@ -364,9 +395,9 @@ void v_nabu_run(
     }
 }
 
-PluginDescriptor *nabu_plugin_descriptor(){
+PluginDescriptor* nabu_plugin_descriptor(){
     int i, j, port;
-    PluginDescriptor *f_result = get_plugin_descriptor(NABU_PORT_COUNT);
+    PluginDescriptor* f_result = get_plugin_descriptor(NABU_PORT_COUNT);
 
     port = NABU_FIRST_CONTROL_PORT;
     for(i = 0; i < NABU_FX_COUNT; ++i){
