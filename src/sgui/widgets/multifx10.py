@@ -639,6 +639,5 @@ class MultiFX10:
             self.knobs[2].set_127_min_max(-12.0, 12.0)
 
         for knob in self.knobs:
-            if knob.control.isVisible():
-                knob.set_value(knob.control.value())
+            knob.set_value(knob.control.value())
 
