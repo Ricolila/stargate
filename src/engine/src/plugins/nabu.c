@@ -24,16 +24,16 @@ void v_nabu_cleanup(PluginHandle instance){
 }
 
 void v_nabu_set_cc_map(PluginHandle instance, char * a_msg){
-    t_nabu *plugin = (t_nabu *)instance;
+    struct NabuPlugin* plugin = (struct NabuPlugin*)instance;
     v_generic_cc_map_set(&plugin->cc_map, a_msg);
 }
 
 void v_nabu_panic(PluginHandle instance){
-    //t_nabu *plugin = (t_nabu*)instance;
+    //struct NabuPlugin *plugin = (struct NabuPlugin*)instance;
 }
 
 void v_nabu_on_stop(PluginHandle instance){
-    //t_nabu *plugin = (t_nabu*)instance;
+    //struct NabuPlugin *plugin = (struct NabuPlugin*)instance;
 }
 
 void v_nabu_connect_buffer(
@@ -45,7 +45,7 @@ void v_nabu_connect_buffer(
     if(a_is_sidechain){
         return;
     }
-    t_nabu *plugin = (t_nabu*)instance;
+    struct NabuPlugin* plugin = (struct NabuPlugin*)instance;
 
     switch(a_index){
         case 0: plugin->output0 = DataLocation; break;
@@ -65,7 +65,7 @@ void v_nabu_connect_port(
     int port,
     PluginData* data
 ){
-    t_nabu* plugin = (t_nabu*)instance;
+    struct NabuPlugin* plugin = (struct NabuPlugin*)instance;
     int fx_num, fx_port, norm_port;
 
     if(port >= NABU_FIRST_CONTROL_PORT && port <= NABU_LAST_CONTROL_PORT){
@@ -120,8 +120,8 @@ PluginHandle g_nabu_instantiate(
     fp_queue_message
     a_queue_func
 ){
-    t_nabu *plugin_data;
-    hpalloc((void**)&plugin_data, sizeof(t_nabu));
+    struct NabuPlugin* plugin_data;
+    hpalloc((void**)&plugin_data, sizeof(struct NabuPlugin));
 
     plugin_data->descriptor = descriptor;
     plugin_data->fs = s_rate;
@@ -158,7 +158,7 @@ void v_nabu_load(
     PluginDescriptor* Descriptor,
     char * a_file_path
 ){
-    t_nabu *plugin_data = (t_nabu*)instance;
+    struct NabuPlugin* plugin_data = (struct NabuPlugin*)instance;
     generic_file_loader(
         instance,
         Descriptor,
@@ -173,15 +173,15 @@ void v_nabu_set_port_value(
     int a_port,
     SGFLT a_value
 ){
-    t_nabu *plugin_data = (t_nabu*)Instance;
+    struct NabuPlugin* plugin_data = (struct NabuPlugin*)Instance;
     plugin_data->port_table[a_port] = a_value;
 }
 
-void v_nabu_check_if_on(t_nabu *plugin_data){
+void v_nabu_check_if_on(struct NabuPlugin* plugin_data){
     int i, index, route;
     int active_fx[NABU_FX_COUNT];
     int routes[NABU_FX_COUNT];
-    t_nabu_mono_modules* mm = &plugin_data->mono_modules;
+    struct NabuMonoModules* mm = &plugin_data->mono_modules;
     mm->routing_plan.active_fx_count = 0;
 
     for(i = 0; i < NABU_FX_COUNT; ++i){
@@ -216,7 +216,7 @@ void v_nabu_check_if_on(t_nabu *plugin_data){
 }
 
 void v_nabu_process_midi_event(
-    t_nabu * plugin_data,
+    struct NabuPlugin* plugin_data,
     t_seq_event * a_event
 ){
     struct MIDIEvent* midi_event;
@@ -253,8 +253,8 @@ void v_nabu_run(
     struct ShdsList* midi_events,
     struct ShdsList *atm_events
 ){
-    t_nabu *plugin_data = (t_nabu*)instance;
-    t_nabu_mono_modules* mm = &plugin_data->mono_modules;
+    struct NabuPlugin* plugin_data = (struct NabuPlugin*)instance;
+    struct NabuMonoModules* mm = &plugin_data->mono_modules;
     t_mf10_multi * f_fx;
     struct MIDIEvent* midi_event;
     struct NabuMonoCluster* step;
@@ -488,7 +488,7 @@ PluginDescriptor *nabu_plugin_descriptor(){
 
 
 void v_nabu_mono_init(
-    t_nabu_mono_modules* a_mono,
+    struct NabuMonoModules* a_mono,
     SGFLT a_sr,
     int a_plugin_uid
 ){

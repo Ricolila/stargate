@@ -158,7 +158,9 @@ class MultiFX10:
             a_port_k1 + 10,
             a_rel_callback,
             a_val_callback,
-            [*(str(x) for x in range(mfx_index + 2, mfx_count + 1)), "Out"],
+            [
+                f'FX{x}' for x in range(mfx_index + 2, mfx_count + 1)
+            ] + ["Out"],
             a_port_dict=a_port_dict,
             a_default_index=0,
             a_preset_mgr=a_preset_mgr,

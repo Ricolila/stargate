@@ -148,6 +148,18 @@ class AbstractUiControl(GridLayoutControl):
         if self.rel_callback is not None:
             self.rel_callback(self.port_num, value)
 
+    def hide(self):
+        self.name_label.hide()
+        self.control.hide()
+        if self.value_label:
+            self.value_label.hide()
+
+    def show(self):
+        self.name_label.show()
+        self.control.show()
+        if self.value_label:
+            self.value_label.show()
+
     def value_conversion(self, a_value):
         """ Convert a control value to a human-readable string """
         if self.min_text and a_value == self.control.minimum():

@@ -19,7 +19,8 @@ class FreqSplitter:
             title="Splitter",
         ):
         self.widget = QGroupBox(title)
-        self.splitters = []
+        self.outputs = []
+        self.freqs = []
         self.layout = QGridLayout(self.widget)
         port = first_port
         self.split_count_knob = knob_control(
@@ -36,6 +37,7 @@ class FreqSplitter:
             a_preset_mgr,
             knob_kwargs,
         )
+        self.split_count_knob.control.valueChanged.connect(self.show_splitters)
         port += 1
         self.split_count_knob.add_to_grid_layout(self.layout, 0)
         self.type_combobox = combobox_control(
@@ -78,8 +80,10 @@ class FreqSplitter:
                 a_port_dict,
                 a_preset_mgr=a_preset_mgr,
             )
+            self.outputs.append(combobox)
             combobox.add_to_grid_layout(self.layout, x)
             port += 1
+            x += 1
         for i in range(3):
             knob = knob_control(
                 knob_size,
@@ -95,6 +99,7 @@ class FreqSplitter:
                 a_preset_mgr,
                 knob_kwargs,
             )
+            self.freqs.append(knob)
             knob.add_to_grid_layout(self.layout,x)
             x += 1
             port += 1
@@ -109,21 +114,29 @@ class FreqSplitter:
                     a_port_dict,
                     a_preset_mgr=a_preset_mgr,
                 )
+                self.outputs.append(combobox)
                 combobox.add_to_grid_layout(self.layout, x)
                 port += 1
                 x += 1
         self.next_port = port
+        self.show_splitters()
 
-    def show_freq_knobs(self, value):
-        for i, controls in zip(
-            range(len(self.splitters)),
-            self.splitters,
+    def show_splitters(self, value=None):
+        value = self.split_count_knob.control.value()
+        if value == 0:
+            self.outputs[0].hide()
+        else:
+            self.outputs[0].show()
+
+        for i, knob, combobox in zip(
+            range(len(self.freqs)),
+            self.freqs,
+            self.outputs[1:],
         ):
-            knob, combobox = controls
             if i >= value:
-                knob.control.hide()
-                combobox.control.hide()
+                knob.hide()
+                combobox.hide()
             else:
-                knob.control.show()
-                combobox.control.show()
+                knob.show()
+                combobox.show()
 

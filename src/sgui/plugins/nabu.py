@@ -143,12 +143,22 @@ class NabuPluginUI(AbstractPluginUI):
             f_knob_size,
             64,
             NABU_FIRST_FREQ_SPLITTER_PORT,
-            [str(x + 1) for x in range(12)] + ["Out"],
+            [f'FX{x + 1}' for x in range(12)] + ["Out"],
             self.plugin_rel_callback,
             self.plugin_val_callback,
             self.port_dict,
             self.preset_manager,
             knob_kwargs,
+        )
+        self.freq_splitter.layout.addItem(
+            QSpacerItem(1, 1, QSizePolicy.Policy.Expanding),
+            1,
+            15,
+        )
+        self.freq_splitter.layout.addItem(
+            QSpacerItem(1, 1, QSizePolicy.Policy.Expanding),
+            1,
+            100,
         )
         self.layout.addWidget(self.freq_splitter.widget)
         self.spectrum_enabled = None

@@ -65,12 +65,12 @@ struct NabuRoutingPlan {
     struct NabuMonoCluster* steps[NABU_FX_COUNT];
 };
 
-typedef struct {
+struct NabuMonoModules {
     struct FreqSplitter splitter;
     struct NabuMonoCluster fx[NABU_FX_COUNT];
     struct NabuRoutingPlan routing_plan;
     struct SamplePair output;
-} t_nabu_mono_modules;
+};
 
 struct NabuSplitterData {
     PluginData* splits;
@@ -89,7 +89,7 @@ struct NabuFXData {
     PluginData* route;
 };
 
-typedef struct {
+struct NabuPlugin {
     char pad1[CACHE_LINE_SIZE];
     PluginData *output0;
     PluginData *output1;
@@ -98,7 +98,7 @@ typedef struct {
     struct NabuFXData controls[NABU_FX_COUNT];
 
     SGFLT fs;
-    t_nabu_mono_modules mono_modules;
+    struct NabuMonoModules mono_modules;
 
     int i_slow_index;
     int is_on;
@@ -113,9 +113,9 @@ typedef struct {
     t_plugin_cc_map cc_map;
     PluginDescriptor * descriptor;
     char pad2[CACHE_LINE_SIZE];
-} t_nabu;
+};
 
-void v_nabu_mono_init(t_nabu_mono_modules*, SGFLT, int);
+void v_nabu_mono_init(struct NabuMonoModules*, SGFLT, int);
 PluginDescriptor *nabu_plugin_descriptor();
 
 #endif /* NABU_PLUGIN_H */
