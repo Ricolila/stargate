@@ -1,5 +1,6 @@
 from . import _shared
 from .control import *
+from .knob import ArcType
 from sglib.lib.translate import _
 from sgui.sgqt import *
 
@@ -217,6 +218,7 @@ class MultiFX10:
             a_val_conversion=_shared.KC_TENTH,
         )
         self.wet_knob.add_to_grid_layout(self.layout, 3)
+        knob_kwargs['arc_type'] = ArcType.BIDIRECTIONAL
         self.pan_knob = knob_control(
             a_knob_size,
             "Pan",
@@ -229,9 +231,9 @@ class MultiFX10:
             a_port_dict=a_port_dict,
             a_preset_mgr=a_preset_mgr,
             knob_kwargs=knob_kwargs,
-            min_text='-inf',
             a_val_conversion=_shared.KC_DECIMAL,
         )
+        knob_kwargs.pop('arc_type')
         self.pan_knob.add_to_grid_layout(self.layout, 4)
 
     def wheel_event(self, a_event=None):
