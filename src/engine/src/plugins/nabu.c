@@ -307,6 +307,15 @@ void v_nabu_run(
                 freqs
             );
         }
+        for(f_i = 0; f_i < mm->routing_plan.active_fx_count; ++f_i){
+            step = mm->routing_plan.steps[f_i];
+            dry_wet_pan_set(
+                &step->dry_wet_pan,
+                (*plugin_data->controls[step->nabu_index].dry) * 0.1,
+                (*plugin_data->controls[step->nabu_index].wet) * 0.1,
+                (*plugin_data->controls[step->nabu_index].pan) * 0.01
+            );
+        }
 
         for(i_mono_out = 0; i_mono_out < sample_count; ++i_mono_out){
             midi_event = &plugin_data->midi_events[midi_event_pos];
@@ -385,8 +394,15 @@ void v_nabu_run(
                     step->input.right
                 );
 
-                step->output->left += f_fx->output0;
-                step->output->right += f_fx->output1;
+                dry_wet_pan_run(
+                    &step->dry_wet_pan,
+                    step->input.left,
+                    step->input.right,
+                    f_fx->output0,
+                    f_fx->output1
+                );
+                step->output->left += step->dry_wet_pan.output.left;
+                step->output->right += step->dry_wet_pan.output.right;
             }
 
             plugin_data->output0[i_mono_out] = mm->output.left;
@@ -529,7 +545,9 @@ void v_nabu_mono_init(
     freq_splitter_init(&a_mono->splitter, a_sr);
     for(f_i = 0; f_i < NABU_FX_COUNT; ++f_i){
         g_mf10_init(&a_mono->fx[f_i].mf10, a_sr, 1);
+        dry_wet_pan_init(&a_mono->fx[f_i].dry_wet_pan);
         a_mono->fx[f_i].fx_index = 0;
+        a_mono->fx[f_i].nabu_index = f_i;
         a_mono->fx[f_i].meta.run = v_mf10_run_off;
         for(f_i2 = 0; f_i2 < NABU_KNOBS_PER_FX; ++f_i2){
             g_sml_init(

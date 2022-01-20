@@ -29,6 +29,7 @@ GNU General Public License for more details.
 #include "audiodsp/modules/modulation/env_follower.h"
 #include "audiodsp/modules/modulation/gate.h"
 #include "audiodsp/modules/multifx/multifx10knob.h"
+#include "audiodsp/modules/signal_routing/dry_wet_pan.h"
 #include "plugin.h"
 #include "compiler.h"
 
@@ -53,11 +54,13 @@ GNU General Public License for more details.
 #define NABU_PORT_COUNT (NABU_LAST_SPLITTER_PORT + 1)
 
 struct NabuMonoCluster {
-    int fx_index;
+    int fx_index;  // The index of the effect being used
+    int nabu_index;  // The index of this effect within Nabu
     struct MultiFX10MetaData meta;
     struct SamplePair input;
     t_smoother_linear smoothers[NABU_KNOBS_PER_FX];
     t_mf10_multi mf10;
+    struct DryWetPan dry_wet_pan;
     struct SamplePair* output;
 };
 
