@@ -46,12 +46,12 @@ class FreqSplitter:
             port,
             a_rel_callback,
             a_val_callback,
-            ["SVF2", "SVF4"],
+            ["SVF2", ],
             a_port_dict,
             a_preset_mgr=a_preset_mgr,
         )
         port += 1
-        self.type_combobox.add_to_grid_layout(self.layout, 5)
+        # self.type_combobox.add_to_grid_layout(self.layout, 5)
         self.res_knob = knob_control(
             knob_size,
             "Res",
