@@ -256,7 +256,7 @@ class MultiFX10:
             knob.control.wheelEvent = self.wheel_event
         self.fx_type.control.wheelEvent = self.wheel_event
 
-    def hide_knobs(self, index):
+    def hide_knobs(self, index, dry_wet_pan=False):
         for i in range(index):
             self.knobs[i].control.show()
 
@@ -264,6 +264,15 @@ class MultiFX10:
             self.knobs[i].control.hide()
             self.knobs[i].name_label.setText("")
             self.knobs[i].val_conversion = _shared.KC_NONE
+
+        if dry_wet_pan:
+            self.pan_knob.hide()
+            self.dry_knob.hide()
+            self.wet_knob.hide()
+        else:
+            self.pan_knob.show()
+            self.dry_knob.show()
+            self.wet_knob.show()
 
     def contextMenuEvent(self, a_event):
         f_menu = QMenu(self.group_box)
@@ -332,7 +341,7 @@ class MultiFX10:
 
     def type_combobox_changed(self, a_val):
         if a_val == 0: #Off
-            self.hide_knobs(0)
+            self.hide_knobs(0, dry_wet_pan=True)
         elif a_val == 1: #LP2
             self.hide_knobs(2)
             self.knobs[0].name_label.setText(_("Freq"))
