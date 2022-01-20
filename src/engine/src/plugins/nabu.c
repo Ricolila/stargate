@@ -553,7 +553,7 @@ void v_nabu_mono_init(
             g_sml_init(
                 &a_mono->fx[f_i].smoothers[f_i2],
                 a_sr,
-                127.0f,
+                1270.0f,
                 0.0f,
                 0.1f
             );

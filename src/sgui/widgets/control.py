@@ -84,7 +84,9 @@ class AbstractUiControl(GridLayoutControl):
         min_text=None,
         max_text=None,
         text_lookup=None,  # Required to be a tuple if KC_TEXT
+        value_multiplier=None,
     ):
+        self.value_multiplier = value_multiplier
         self.min_text = min_text
         self.max_text = max_text
         if a_label is None:
@@ -170,6 +172,8 @@ class AbstractUiControl(GridLayoutControl):
             return self.text_lookup[a_value]
 
         f_value = float(a_value)
+        if self.value_multiplier:
+            f_value *= self.value_multiplier
         f_dec_value = 0.0
         if self.val_conversion == _shared.KC_NONE:
             return None
@@ -665,6 +669,7 @@ class knob_control(AbstractUiControl):
         min_text=None,
         max_text=None,
         text_lookup=None,
+        value_multiplier=None,
     ):
         """
             a_size: The size of the knob (x or y), in pixels
@@ -691,6 +696,9 @@ class knob_control(AbstractUiControl):
                 A tuple of strings to display as the knob value label.  If
                 not None, a_min_val must be 0, a_max_val must be
                 len(text_lookup) - 1, and a_val_conversion=_shared.KC_TEXT.
+            value_multiplier:
+                Number to multiply the raw knob value by before converting
+                to the value label text
         """
         if a_val_conversion == _shared.KC_TEXT:
             assert (
@@ -725,6 +733,7 @@ class knob_control(AbstractUiControl):
             min_text,
             max_text,
             text_lookup,
+            value_multiplier=value_multiplier,
         )
         self.set_value(a_default_val)
 
@@ -745,6 +754,7 @@ class slider_control(AbstractUiControl):
         a_preset_mgr=None,
         min_text=None,
         max_text=None,
+        value_multiplier=None,
     ):
         self.control = QSlider(a_orientation)
         self.control.contextMenuEvent = self.contextMenuEvent
@@ -767,6 +777,7 @@ class slider_control(AbstractUiControl):
             a_default_val,
             min_text,
             max_text,
+            value_multiplier,
         )
         self.set_value(a_default_val)
 

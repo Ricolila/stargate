@@ -142,11 +142,12 @@ class MultiFX10:
                 a_rel_callback,
                 a_val_callback,
                 0,
-                127,
-                64,
+                1270,
+                640,
                 a_port_dict=a_port_dict,
                 a_preset_mgr=a_preset_mgr,
                 knob_kwargs=knob_kwargs,
+                value_multiplier=0.1,
             )
             f_knob.add_to_grid_layout(self.layout, f_i + 10)
             self.knobs.append(f_knob)

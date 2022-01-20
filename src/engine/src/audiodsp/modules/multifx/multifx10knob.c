@@ -241,16 +241,11 @@ void v_mf10_set_from_smoothers(
 ){
     int i;
     for(i = 0; i < knob_count; ++i){
-        self->control[i] = smoothers[i].last_value;
+        self->control[i] = smoothers[i].last_value * 0.1;
         self->mod_value[i] = 0.0f;
     }
 }
 
-/* void v_mf10_mod(t_mf10_multi* self,
- * SGFLT a_mod, //Expects 0 to 1 or -1 to 1 range from an LFO, envelope, etc...
- * SGFLT a_amt0, SGFLT a_amt1, SGFLT a_amt2)  //Amount, from the GUI.
- *                                              Range:  -100 to 100
- */
 void v_mf10_mod(
     t_mf10_multi* self,
     SGFLT a_mod,
