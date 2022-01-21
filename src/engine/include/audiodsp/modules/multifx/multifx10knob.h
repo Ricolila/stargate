@@ -17,6 +17,7 @@ GNU General Public License for more details.
 /*This is actually count, not index TODO:  Rename*/
 #define MULTIFX10KNOB_FX_COUNT 36
 #define MULTIFX10KNOB_KNOB_COUNT 10
+#define MULTIFX10_MAX_FX_COUNT 12
 
 #include "audiodsp/lib/amp.h"
 #include "audiodsp/lib/smoother-linear.h"
@@ -37,6 +38,7 @@ GNU General Public License for more details.
 #include "audiodsp/modules/filter/svf_stereo.h"
 #include "audiodsp/modules/signal_routing/amp_and_panner.h"
 #include "audiodsp/modules/signal_routing/audio_xfade.h"
+#include "audiodsp/modules/signal_routing/dry_wet_pan.h"
 #include "compiler.h"
 
 /*BIG TODO:  Add a function to modify for the modulation sources*/
@@ -78,6 +80,31 @@ struct MultiFX10MetaData {
     fp_mf10_run run;
     fp_mf10_reset reset;
     int knob_count;
+};
+
+struct MultiFX10MonoCluster {
+    int fx_index;  // The index of the effect being used
+    int mf10_index;  // The index of this effect within Nabu
+    struct MultiFX10MetaData meta;
+    struct SamplePair input;
+    t_smoother_linear smoothers[MULTIFX10KNOB_KNOB_COUNT];
+    t_mf10_multi mf10;
+    struct DryWetPan dry_wet_pan;
+    struct SamplePair* output;
+};
+
+struct MultiFX10RoutingPlan {
+    int active_fx_count;
+    struct MultiFX10MonoCluster* steps[MULTIFX10_MAX_FX_COUNT];
+};
+
+struct MultiFX10Controls {
+    PluginData* knobs[MULTIFX10KNOB_KNOB_COUNT];
+    PluginData* dry;
+    PluginData* wet;
+    PluginData* pan;
+    PluginData* type;
+    PluginData* route;
 };
 
 void v_mf10_set(
@@ -148,6 +175,13 @@ void g_mf10_init(
     t_mf10_multi * f_result,
     SGFLT a_sample_rate,
     int a_huge_pages
+);
+int mf10_routing_plan_set(
+    struct MultiFX10RoutingPlan* plan,
+    struct MultiFX10Controls* controls,
+    struct MultiFX10MonoCluster* fx,
+    struct SamplePair* output,
+    int fx_count
 );
 
 #endif /* MULTIFX10KNOB_H */

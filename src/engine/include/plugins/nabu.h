@@ -29,15 +29,11 @@ GNU General Public License for more details.
 #include "audiodsp/modules/modulation/env_follower.h"
 #include "audiodsp/modules/modulation/gate.h"
 #include "audiodsp/modules/multifx/multifx10knob.h"
-#include "audiodsp/modules/signal_routing/dry_wet_pan.h"
 #include "plugin.h"
 #include "compiler.h"
 
-
-#define NABU_FX_COUNT 12
-#define NABU_MAIN_OUT NABU_FX_COUNT
-// This is only the knobs available to use in effects, not dray/wet, pan, etc..
-#define NABU_KNOBS_PER_FX 10
+// The index of the main output
+#define NABU_MAIN_OUT MULTIFX10_MAX_FX_COUNT
 // All types of controls
 #define NABU_CONTROLS_PER_FX 15
 #define NABU_SLOW_INDEX_ITERATIONS 30
@@ -45,7 +41,7 @@ GNU General Public License for more details.
 #define NABU_FIRST_CONTROL_PORT 4
 
 #define NABU_LAST_CONTROL_PORT \
-    (NABU_FIRST_CONTROL_PORT + (NABU_FX_COUNT * NABU_CONTROLS_PER_FX) - 1)
+    (NABU_FIRST_CONTROL_PORT + (MULTIFX10_MAX_FX_COUNT * NABU_CONTROLS_PER_FX) - 1)
 
 #define NABU_FIRST_SPLITTER_PORT (NABU_LAST_CONTROL_PORT + 1)
 #define NABU_LAST_SPLITTER_PORT (NABU_FIRST_SPLITTER_PORT + 2 + (2 * 4) - 1)
@@ -53,44 +49,11 @@ GNU General Public License for more details.
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
 #define NABU_PORT_COUNT (NABU_LAST_SPLITTER_PORT + 1)
 
-struct NabuMonoCluster {
-    int fx_index;  // The index of the effect being used
-    int nabu_index;  // The index of this effect within Nabu
-    struct MultiFX10MetaData meta;
-    struct SamplePair input;
-    t_smoother_linear smoothers[NABU_KNOBS_PER_FX];
-    t_mf10_multi mf10;
-    struct DryWetPan dry_wet_pan;
-    struct SamplePair* output;
-};
-
-struct NabuRoutingPlan {
-    int active_fx_count;
-    struct NabuMonoCluster* steps[NABU_FX_COUNT];
-};
-
 struct NabuMonoModules {
     struct FreqSplitter splitter;
-    struct NabuMonoCluster fx[NABU_FX_COUNT];
-    struct NabuRoutingPlan routing_plan;
+    struct MultiFX10MonoCluster fx[MULTIFX10_MAX_FX_COUNT];
+    struct MultiFX10RoutingPlan routing_plan;
     struct SamplePair output;
-};
-
-struct NabuSplitterData {
-    PluginData* splits;
-    PluginData* type;
-    PluginData* res;
-    PluginData* output[4];
-    PluginData* freq[3];
-};
-
-struct NabuFXData {
-    PluginData* knobs[NABU_KNOBS_PER_FX];
-    PluginData* dry;
-    PluginData* wet;
-    PluginData* pan;
-    PluginData* type;
-    PluginData* route;
 };
 
 struct NabuPlugin {
@@ -98,8 +61,8 @@ struct NabuPlugin {
     PluginData *output0;
     PluginData *output1;
 
-    struct NabuSplitterData splitter_controls;
-    struct NabuFXData controls[NABU_FX_COUNT];
+    struct FreqSplitterControls splitter_controls;
+    struct MultiFX10Controls controls[MULTIFX10_MAX_FX_COUNT];
 
     SGFLT fs;
     struct NabuMonoModules mono_modules;

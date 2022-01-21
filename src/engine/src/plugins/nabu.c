@@ -68,7 +68,7 @@ void v_nabu_connect_port(
         norm_port = (port - NABU_FIRST_CONTROL_PORT);
         fx_num = norm_port / NABU_CONTROLS_PER_FX;
         fx_port = norm_port % NABU_CONTROLS_PER_FX;
-        if(fx_port < NABU_KNOBS_PER_FX){
+        if(fx_port < MULTIFX10KNOB_KNOB_COUNT){
             plugin->controls[fx_num].knobs[fx_port] = data;
         } else if(fx_port == 10){
             plugin->controls[fx_num].route = data;
@@ -172,44 +172,6 @@ void v_nabu_set_port_value(
     plugin_data->port_table[a_port] = a_value;
 }
 
-void v_nabu_check_if_on(struct NabuPlugin* plugin_data){
-    int i, index, route;
-    int active_fx[NABU_FX_COUNT];
-    int routes[NABU_FX_COUNT];
-    struct NabuMonoModules* mm = &plugin_data->mono_modules;
-    mm->routing_plan.active_fx_count = 0;
-
-    for(i = 0; i < NABU_FX_COUNT; ++i){
-        index = (int)(*(plugin_data->controls[i].type));
-        route = (int)(*(plugin_data->controls[i].route)) + i + 1;
-        mm->fx[i].fx_index = index;
-        mm->fx[i].meta = mf10_get_meta(index);
-        routes[i] = route;
-
-        if(index){
-            active_fx[i] = 1;
-            plugin_data->is_on = 1;
-            mm->routing_plan.steps[mm->routing_plan.active_fx_count] =
-                &mm->fx[i];
-            ++mm->routing_plan.active_fx_count;
-        } else {
-            active_fx[i] = 0;
-        }
-    }
-
-    for(i = 0; i < mm->routing_plan.active_fx_count; ++i){
-        if(
-            routes[i] == NABU_MAIN_OUT
-            ||
-            active_fx[routes[i]] == 0
-        ){
-            mm->routing_plan.steps[i]->output = &mm->output;
-        } else {
-            mm->routing_plan.steps[i]->output = &mm->fx[routes[i]].input;
-        }
-    }
-}
-
 void v_nabu_process_midi_event(
     struct NabuPlugin* plugin_data,
     t_seq_event * a_event
@@ -229,8 +191,13 @@ void v_nabu_process_midi_event(
         midi_event->value = a_event->value;
 
         if(!plugin_data->is_on){
-            v_nabu_check_if_on(plugin_data);
-
+            plugin_data->is_on = mf10_routing_plan_set(
+                &plugin_data->mono_modules.routing_plan,
+                plugin_data->controls,
+                plugin_data->mono_modules.fx,
+                &plugin_data->mono_modules.output,
+                MULTIFX10_MAX_FX_COUNT
+            );
             //Meaning that we now have set the port anyways because the
             //main loop won't be running
             if(!plugin_data->is_on){
@@ -252,7 +219,7 @@ void v_nabu_run(
     struct NabuMonoModules* mm = &plugin_data->mono_modules;
     t_mf10_multi * f_fx;
     struct MIDIEvent* midi_event;
-    struct NabuMonoCluster* step;
+    struct MultiFX10MonoCluster* step;
     SGFLT splitter_input[2];
 
     t_seq_event **events = (t_seq_event**)midi_events->data;
@@ -285,8 +252,13 @@ void v_nabu_run(
 
     if(plugin_data->i_slow_index >= NABU_SLOW_INDEX_ITERATIONS){
         plugin_data->i_slow_index -= NABU_SLOW_INDEX_ITERATIONS;
-        plugin_data->is_on = 0;
-        v_nabu_check_if_on(plugin_data);
+        plugin_data->is_on = mf10_routing_plan_set(
+            &plugin_data->mono_modules.routing_plan,
+            plugin_data->controls,
+            plugin_data->mono_modules.fx,
+            &plugin_data->mono_modules.output,
+            MULTIFX10_MAX_FX_COUNT
+        );
     } else {
         ++plugin_data->i_slow_index;
     }
@@ -311,9 +283,9 @@ void v_nabu_run(
             step = mm->routing_plan.steps[f_i];
             dry_wet_pan_set(
                 &step->dry_wet_pan,
-                (*plugin_data->controls[step->nabu_index].dry) * 0.1,
-                (*plugin_data->controls[step->nabu_index].wet) * 0.1,
-                (*plugin_data->controls[step->nabu_index].pan) * 0.01
+                (*plugin_data->controls[step->mf10_index].dry) * 0.1,
+                (*plugin_data->controls[step->mf10_index].wet) * 0.1,
+                (*plugin_data->controls[step->mf10_index].pan) * 0.01
             );
         }
 
@@ -416,7 +388,7 @@ PluginDescriptor* nabu_plugin_descriptor(){
     PluginDescriptor* f_result = get_plugin_descriptor(NABU_PORT_COUNT);
 
     port = NABU_FIRST_CONTROL_PORT;
-    for(i = 0; i < NABU_FX_COUNT; ++i){
+    for(i = 0; i < MULTIFX10_MAX_FX_COUNT; ++i){
         for(j = 0; j < 10; ++j){
             set_plugin_port(f_result, port, 64.0f, 0.0f, 127.0f);
             ++port;
@@ -426,7 +398,7 @@ PluginDescriptor* nabu_plugin_descriptor(){
             port,  // Route
             0.0,
             0.0,
-            (SGFLT)(NABU_FX_COUNT - i + 1)
+            (SGFLT)(MULTIFX10_MAX_FX_COUNT - i + 1)
         );
         ++port;
         set_plugin_port(
@@ -543,13 +515,13 @@ void v_nabu_mono_init(
     int f_i2;
 
     freq_splitter_init(&a_mono->splitter, a_sr);
-    for(f_i = 0; f_i < NABU_FX_COUNT; ++f_i){
+    for(f_i = 0; f_i < MULTIFX10_MAX_FX_COUNT; ++f_i){
         g_mf10_init(&a_mono->fx[f_i].mf10, a_sr, 1);
         dry_wet_pan_init(&a_mono->fx[f_i].dry_wet_pan);
         a_mono->fx[f_i].fx_index = 0;
-        a_mono->fx[f_i].nabu_index = f_i;
+        a_mono->fx[f_i].mf10_index = f_i;
         a_mono->fx[f_i].meta.run = v_mf10_run_off;
-        for(f_i2 = 0; f_i2 < NABU_KNOBS_PER_FX; ++f_i2){
+        for(f_i2 = 0; f_i2 < MULTIFX10KNOB_KNOB_COUNT; ++f_i2){
             g_sml_init(
                 &a_mono->fx[f_i].smoothers[f_i2],
                 a_sr,

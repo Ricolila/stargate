@@ -246,6 +246,50 @@ void v_mf10_set_from_smoothers(
     }
 }
 
+int mf10_routing_plan_set(
+    struct MultiFX10RoutingPlan* plan,
+    struct MultiFX10Controls* controls,
+    struct MultiFX10MonoCluster* fx,
+    struct SamplePair* output,
+    int fx_count
+){
+    int i, index, route;
+    int result = 0;
+    int active_fx[MULTIFX10_MAX_FX_COUNT];
+    int routes[MULTIFX10_MAX_FX_COUNT];
+    plan->active_fx_count = 0;
+
+    for(i = 0; i < MULTIFX10_MAX_FX_COUNT; ++i){
+        index = (int)(*(controls[i].type));
+        route = (int)(*(controls[i].route)) + i + 1;
+        fx[i].fx_index = index;
+        fx[i].meta = mf10_get_meta(index);
+        routes[i] = route;
+
+        if(index){
+            active_fx[i] = 1;
+            result = 1;
+            plan->steps[plan->active_fx_count] = &fx[i];
+            ++plan->active_fx_count;
+        } else {
+            active_fx[i] = 0;
+        }
+    }
+
+    for(i = 0; i < plan->active_fx_count; ++i){
+        if(
+            routes[i] == fx_count
+            ||
+            active_fx[routes[i]] == 0
+        ){
+            plan->steps[i]->output = output;
+        } else {
+            plan->steps[i]->output = &fx[routes[i]].input;
+        }
+    }
+    return result;
+}
+
 void v_mf10_mod(
     t_mf10_multi* self,
     SGFLT a_mod,

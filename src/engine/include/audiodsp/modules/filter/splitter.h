@@ -28,6 +28,14 @@ struct _FreqSplitter {
     t_svf2_filter svf;
 };
 
+struct FreqSplitterControls {
+    PluginData* splits;
+    PluginData* type;
+    PluginData* res;
+    PluginData* output[4];
+    PluginData* freq[3];
+};
+
 struct FreqSplitter {
     int splits;
     struct _FreqSplitter splitters[FREQ_SPLITTER_MAX_SPLITS];
