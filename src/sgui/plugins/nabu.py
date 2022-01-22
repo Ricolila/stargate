@@ -19,6 +19,7 @@ NABU_FX_COUNT = 12
 
 NABU_FIRST_CONTROL_PORT = 4
 NABU_FIRST_FREQ_SPLITTER_PORT = NABU_FIRST_CONTROL_PORT + (NABU_FX_COUNT * 15)
+NABU_UI_MSG_ENABLED_PORT = 194
 
 def _port_map():
     port_map = {}
@@ -139,6 +140,13 @@ class NabuPluginUI(AbstractPluginUI):
         self.presets_hlayout.addItem(
             QSpacerItem(1, 1, QSizePolicy.Policy.Expanding),
         )
+        self.ui_msg_enabled = null_control(
+            NABU_UI_MSG_ENABLED_PORT,
+            self.plugin_rel_callback,
+            self.plugin_val_callback,
+            0,
+            self.port_dict,
+        )
         self.freq_splitter = FreqSplitter(
             f_knob_size,
             64,
@@ -178,6 +186,13 @@ class NabuPluginUI(AbstractPluginUI):
         self.fx_scrollarea.setFixedHeight(500)
         self.fx_scrollarea.setWidget(self.fx_scrollarea_widget)
 
+        self.peak_meters = []
+        peak_gradient = QLinearGradient(0., 0., 0., 100.)
+        peak_gradient.setColorAt(0.0, QColor("#cc2222"))
+        peak_gradient.setColorAt(0.3, QColor("#cc2222"))
+        peak_gradient.setColorAt(0.6, QColor("#8877bb"))
+        peak_gradient.setColorAt(1.0, QColor("#7777cc"))
+
         f_port = 4
         for i in range(NABU_FX_COUNT):
             f_effect = MultiFX10(
@@ -192,9 +207,54 @@ class NabuPluginUI(AbstractPluginUI):
                 knob_kwargs=knob_kwargs,
                 fixed_height=True,
             )
+            peak_meters = (
+                peak_meter(16, False, brush=peak_gradient),
+                peak_meter(16, False, brush=peak_gradient),
+            )
+            self.peak_meters.append(peak_meters)
+            f_effect.layout.addWidget(peak_meters[0].widget, 0, 50, 3, 1)
+            f_effect.layout.addWidget(peak_meters[1].widget, 0, 51, 3, 1)
+            #f_effect.layout.addWidget(
             self.effects.append(f_effect)
             self.fx_layout.addWidget(f_effect.group_box)
             f_port += 15
 
         self.open_plugin_file()
         self.set_midi_learn(NABU_PORT_MAP)
+        self.enable_ui_msg(True)
+
+    def widget_close(self):
+        self.enable_ui_msg(False)
+        AbstractPluginUI.widget_close(self)
+
+    def widget_show(self):
+        self.enable_ui_msg(True)
+
+    def enable_ui_msg(self, a_enabled):
+        if a_enabled:
+            self.plugin_val_callback(
+                NABU_UI_MSG_ENABLED_PORT,
+                1.0,
+            )
+        else:
+            self.plugin_val_callback(
+                NABU_UI_MSG_ENABLED_PORT,
+                0.0,
+            )
+
+    def ui_message(self, a_name, a_value):
+        if a_name == "gain":
+            for msg in a_value.split('|'):
+                values = msg.split(':')
+                index = int(values[0])
+                in_peak, out_peak = self.peak_meters[index]
+                in_peak.set_value(values[1:3])
+                out_peak.set_value(values[3:5])
+        else:
+            AbstractPluginUI.ui_message(a_name, a_value)
+
+    def save_plugin_file(self):
+        # Don't allow the peak meter to run at startup
+        self.ui_msg_enabled.set_value(0)
+        AbstractPluginUI.save_plugin_file(self)
+

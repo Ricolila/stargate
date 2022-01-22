@@ -87,10 +87,12 @@ struct MultiFX10MonoCluster {
     int mf10_index;  // The index of this effect within Nabu
     struct MultiFX10MetaData meta;
     struct SamplePair input;
+    t_pkm_peak_meter input_peak;
     t_smoother_linear smoothers[MULTIFX10KNOB_KNOB_COUNT];
     t_mf10_multi mf10;
     struct DryWetPan dry_wet_pan;
     struct SamplePair* output;
+    t_pkm_peak_meter output_peak;
 };
 
 struct MultiFX10RoutingPlan {
@@ -161,7 +163,6 @@ void mf10_transform_svf_filter(t_mf10_multi*);
 
 //SGFLT f_mf10_midi_to_pitch(SGFLT);
 
-t_mf10_multi * g_mf10_get(SGFLT);
 void v_mf10_free(t_mf10_multi*);
 struct MultiFX10MetaData mf10_get_meta(int);
 
@@ -183,6 +184,7 @@ int mf10_routing_plan_set(
     struct SamplePair* output,
     int fx_count
 );
+void mf10_mono_cluster_init(struct MultiFX10MonoCluster*, SGFLT, int);
 
 #endif /* MULTIFX10KNOB_H */
 

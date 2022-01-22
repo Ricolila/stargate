@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #include "audiodsp/constants.h"
 #include "audiodsp/lib/amp.h"
 #include "audiodsp/lib/osc_core.h"
+#include "audiodsp/lib/peak_meter.h"
 #include "audiodsp/lib/pitch_core.h"
 #include "audiodsp/lib/smoother-linear.h"
 #include "audiodsp/lib/spectrum_analyzer.h"
@@ -40,14 +41,18 @@ GNU General Public License for more details.
 
 #define NABU_FIRST_CONTROL_PORT 4
 
-#define NABU_LAST_CONTROL_PORT \
-    (NABU_FIRST_CONTROL_PORT + (MULTIFX10_MAX_FX_COUNT * NABU_CONTROLS_PER_FX) - 1)
+#define NABU_LAST_CONTROL_PORT 183
+    //(NABU_FIRST_CONTROL_PORT +
+    //(MULTIFX10_MAX_FX_COUNT * NABU_CONTROLS_PER_FX) - 1)
 
-#define NABU_FIRST_SPLITTER_PORT (NABU_LAST_CONTROL_PORT + 1)
-#define NABU_LAST_SPLITTER_PORT (NABU_FIRST_SPLITTER_PORT + 2 + (2 * 4) - 1)
-/* must be 1 + highest value above
- * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define NABU_PORT_COUNT (NABU_LAST_SPLITTER_PORT + 1)
+#define NABU_FIRST_SPLITTER_PORT 184
+  //(NABU_LAST_CONTROL_PORT + 1)
+#define NABU_LAST_SPLITTER_PORT 193
+  // (NABU_FIRST_SPLITTER_PORT + 2 + (2 * 4) - 1)
+#define NABU_UI_MSG_ENABLED_PORT 194
+// must be 1 + highest value above
+// CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING
+#define NABU_PORT_COUNT 195
 
 struct NabuMonoModules {
     struct FreqSplitter splitter;
@@ -63,12 +68,15 @@ struct NabuPlugin {
 
     struct FreqSplitterControls splitter_controls;
     struct MultiFX10Controls controls[MULTIFX10_MAX_FX_COUNT];
+    PluginData* ui_msg_enabled;
 
     SGFLT fs;
     struct NabuMonoModules mono_modules;
 
     int i_slow_index;
     int is_on;
+    int ui_buff_count;
+    int ui_buff_limit;
 
     struct MIDIEvent midi_events[200];
     int midi_event_count;
@@ -79,6 +87,7 @@ struct NabuPlugin {
     SGFLT * port_table;
     t_plugin_cc_map cc_map;
     PluginDescriptor * descriptor;
+    char msg_buff[1024];
     char pad2[CACHE_LINE_SIZE];
 };
 

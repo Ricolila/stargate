@@ -103,9 +103,15 @@ void v_nabu_connect_port(
             case 9: plugin->splitter_controls.output[3] = data; break;
         };
     } else {
-        sg_abort("Nabu: Port %i is invalid", port);
+        switch(port){
+            case NABU_UI_MSG_ENABLED_PORT:
+                plugin->ui_msg_enabled = data;
+                break;
+            default:
+                sg_abort("Nabu: Port %i is invalid", port);
+                break;
+        }
     }
-
 }
 
 PluginHandle g_nabu_instantiate(
@@ -113,8 +119,7 @@ PluginHandle g_nabu_instantiate(
     int s_rate,
     fp_get_audio_pool_item_from_host a_host_audio_pool_func,
     int a_plugin_uid,
-    fp_queue_message
-    a_queue_func
+    fp_queue_message a_queue_func
 ){
     struct NabuPlugin* plugin_data;
     hpalloc((void**)&plugin_data, sizeof(struct NabuPlugin));
@@ -131,6 +136,8 @@ PluginHandle g_nabu_instantiate(
     );
 
     plugin_data->i_slow_index = NABU_SLOW_INDEX_ITERATIONS + NABU_AMORITIZER;
+    plugin_data->ui_buff_limit = (int)(s_rate / 30.);
+    plugin_data->ui_buff_count = 0;
 
     ++NABU_AMORITIZER;
     if(NABU_AMORITIZER >= NABU_SLOW_INDEX_ITERATIONS){
@@ -360,6 +367,11 @@ void v_nabu_run(
                     mm->fx[f_i].meta.knob_count
                 );
 
+                v_pkm_run_single(
+                    &step->input_peak,
+                    step->input.left,
+                    step->input.right
+                );
                 step->meta.run(
                     f_fx,
                     step->input.left,
@@ -373,12 +385,50 @@ void v_nabu_run(
                     f_fx->output0,
                     f_fx->output1
                 );
+                v_pkm_run_single(
+                    &step->output_peak,
+                    step->dry_wet_pan.output.left,
+                    step->dry_wet_pan.output.right
+                );
                 step->output->left += step->dry_wet_pan.output.left;
                 step->output->right += step->dry_wet_pan.output.right;
             }
 
             plugin_data->output0[i_mono_out] = mm->output.left;
             plugin_data->output1[i_mono_out] = mm->output.right;
+        }
+    }
+
+    if((int)(*plugin_data->ui_msg_enabled)){
+        plugin_data->ui_buff_count += sample_count;
+        if(plugin_data->ui_buff_count >= plugin_data->ui_buff_limit){
+            plugin_data->ui_buff_count -= plugin_data->ui_buff_limit;
+            char* ptr = &plugin_data->msg_buff[0];
+            int count = sprintf(
+                ptr,
+                "%i|gain",
+                plugin_data->plugin_uid
+            );
+            ptr += count;
+            for(i = 0; i < MULTIFX10_MAX_FX_COUNT; ++i){
+                if((int)*plugin_data->controls[i].type != 0){
+                    count = sprintf(
+                        ptr,
+                        "|%i:%f:%f:%f:%f",
+                        i,
+                        mm->fx[i].input_peak.value[0],
+                        mm->fx[i].input_peak.value[1],
+                        mm->fx[i].output_peak.value[0],
+                        mm->fx[i].output_peak.value[1]
+                    );
+                } else {
+                    count = sprintf(ptr, "|%i:0:0:0:0", i);
+                }
+                ptr += count;
+                v_pkm_reset(&mm->fx[i].input_peak);
+                v_pkm_reset(&mm->fx[i].output_peak);
+            }
+            plugin_data->queue_func("ui", plugin_data->msg_buff);
         }
     }
 }
@@ -487,6 +537,13 @@ PluginDescriptor* nabu_plugin_descriptor(){
         ++port;
     }
 
+    set_plugin_port(
+        f_result,
+        NABU_UI_MSG_ENABLED_PORT,
+        0.0,
+        0.0,
+        1.0
+    );
     f_result->cleanup = v_nabu_cleanup;
     f_result->connect_port = v_nabu_connect_port;
     f_result->connect_buffer = v_nabu_connect_buffer;
@@ -507,29 +564,15 @@ PluginDescriptor* nabu_plugin_descriptor(){
 
 
 void v_nabu_mono_init(
-    struct NabuMonoModules* a_mono,
-    SGFLT a_sr,
+    struct NabuMonoModules* self,
+    SGFLT sr,
     int a_plugin_uid
 ){
-    int f_i;
-    int f_i2;
+    int i;
 
-    freq_splitter_init(&a_mono->splitter, a_sr);
-    for(f_i = 0; f_i < MULTIFX10_MAX_FX_COUNT; ++f_i){
-        g_mf10_init(&a_mono->fx[f_i].mf10, a_sr, 1);
-        dry_wet_pan_init(&a_mono->fx[f_i].dry_wet_pan);
-        a_mono->fx[f_i].fx_index = 0;
-        a_mono->fx[f_i].mf10_index = f_i;
-        a_mono->fx[f_i].meta.run = v_mf10_run_off;
-        for(f_i2 = 0; f_i2 < MULTIFX10KNOB_KNOB_COUNT; ++f_i2){
-            g_sml_init(
-                &a_mono->fx[f_i].smoothers[f_i2],
-                a_sr,
-                1270.0f,
-                0.0f,
-                0.1f
-            );
-        }
+    freq_splitter_init(&self->splitter, sr);
+    for(i = 0; i < MULTIFX10_MAX_FX_COUNT; ++i){
+        mf10_mono_cluster_init(&self->fx[i], sr, i);
     }
 }
 

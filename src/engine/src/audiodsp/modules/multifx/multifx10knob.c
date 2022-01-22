@@ -1186,16 +1186,28 @@ void g_mf10_init(
     soft_clipper_init(&f_result->soft_clipper);
 }
 
-/* t_mf10_multi g_mf10_get(
- * SGFLT a_sample_rate)
- */
-t_mf10_multi * g_mf10_get(SGFLT a_sample_rate){
-    t_mf10_multi * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_mf10_multi));
-    g_mf10_init(f_result, a_sample_rate, 0);
-
-    return f_result;
+void mf10_mono_cluster_init(
+    struct MultiFX10MonoCluster* self,
+    SGFLT sr,
+    int index
+){
+    int i;
+    g_mf10_init(&self->mf10, sr, 1);
+    dry_wet_pan_init(&self->dry_wet_pan);
+    self->fx_index = 0;
+    self->mf10_index = index;
+    self->meta.run = v_mf10_run_off;
+    g_pkm_init(&self->input_peak);
+    g_pkm_init(&self->output_peak);
+    for(i = 0; i < MULTIFX10KNOB_KNOB_COUNT; ++i){
+        g_sml_init(
+            &self->smoothers[i],
+            sr,
+            1270.0f,
+            0.0f,
+            0.1f
+        );
+    }
 }
 
 void v_mf10_free(t_mf10_multi * self ){
@@ -1205,7 +1217,7 @@ void v_mf10_free(t_mf10_multi * self ){
         v_cmb_free(&self->comb_filter1);
         v_glc_glitch_free(&self->glitch);
         v_lim_free(&self->limiter);
-        free(self);
+        // free(self);
     }
 }
 
