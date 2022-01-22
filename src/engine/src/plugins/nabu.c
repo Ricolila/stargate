@@ -241,13 +241,13 @@ void v_nabu_run(
         v_nabu_process_midi_event(plugin_data, events[event_pos]);
     }
 
-    int f_i, i;
+    int i, j;
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
 
     t_seq_event * ev_tmp;
-    for(f_i = 0; f_i < atm_events->len; ++f_i){
-        ev_tmp = (t_seq_event*)atm_events->data[f_i];
+    for(i = 0; i < atm_events->len; ++i){
+        ev_tmp = (t_seq_event*)atm_events->data[i];
         v_plugin_event_queue_add(
             &plugin_data->atm_queue,
             ev_tmp->type,
@@ -286,8 +286,8 @@ void v_nabu_run(
                 freqs
             );
         }
-        for(f_i = 0; f_i < mm->routing_plan.active_fx_count; ++f_i){
-            step = mm->routing_plan.steps[f_i];
+        for(i = 0; i < mm->routing_plan.active_fx_count; ++i){
+            step = mm->routing_plan.steps[i];
             dry_wet_pan_set(
                 &step->dry_wet_pan,
                 (*plugin_data->controls[step->mf10_index].dry) * 0.1,
@@ -322,8 +322,8 @@ void v_nabu_run(
 
             mm->output.left = 0.0;
             mm->output.right = 0.0;
-            for(f_i = 0; f_i < mm->routing_plan.active_fx_count; ++f_i){
-                step = mm->routing_plan.steps[f_i];
+            for(i = 0; i < mm->routing_plan.active_fx_count; ++i){
+                step = mm->routing_plan.steps[i];
                 step->input.left = 0.0;
                 step->input.right = 0.0;
             }
@@ -333,16 +333,16 @@ void v_nabu_run(
                 splitter_input[0] = plugin_data->output0[i_mono_out];
                 splitter_input[1] = plugin_data->output1[i_mono_out];
                 freq_splitter_run(&mm->splitter, splitter_input);
-                for(i = 0; i < splits + 1; ++i){
-                    output = (int)(*plugin_data->splitter_controls.output[i]);
+                for(j = 0; j < splits + 1; ++j){
+                    output = (int)(*plugin_data->splitter_controls.output[j]);
                     if(output == NABU_MAIN_OUT){
-                        mm->output.left += mm->splitter.output[i][0];
-                        mm->output.right += mm->splitter.output[i][1];
+                        mm->output.left += mm->splitter.output[j][0];
+                        mm->output.right += mm->splitter.output[j][1];
                     } else {
                         mm->fx[output].input.left +=
-                            mm->splitter.output[i][0];
+                            mm->splitter.output[j][0];
                         mm->fx[output].input.right +=
-                            mm->splitter.output[i][1];
+                            mm->splitter.output[j][1];
                     }
                 }
             } else {
@@ -351,20 +351,20 @@ void v_nabu_run(
                 step->input.right = plugin_data->output1[i_mono_out];
             }
 
-            for(f_i = 0; f_i < mm->routing_plan.active_fx_count; ++f_i){
-                step = mm->routing_plan.steps[f_i];
+            for(i = 0; i < mm->routing_plan.active_fx_count; ++i){
+                step = mm->routing_plan.steps[i];
                 f_fx = &step->mf10;
-                for(i = 0; i < step->meta.knob_count; ++i){
+                for(j = 0; j < step->meta.knob_count; ++j){
                     v_sml_run(
-                        &step->smoothers[i],
-                        *plugin_data->controls[f_i].knobs[i]
+                        &step->smoothers[j],
+                        *plugin_data->controls[step->mf10_index].knobs[j]
                     );
                 }
 
                 v_mf10_set_from_smoothers(
                     f_fx,
-                    mm->fx[f_i].smoothers,
-                    mm->fx[f_i].meta.knob_count
+                    step->smoothers,
+                    step->meta.knob_count
                 );
 
                 v_pkm_run_single(
