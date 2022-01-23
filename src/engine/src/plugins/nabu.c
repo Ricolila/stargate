@@ -224,12 +224,14 @@ void v_nabu_run(
     struct ShdsList* midi_events,
     struct ShdsList* atm_events
 ){
+    int i, j;
     struct NabuPlugin* plugin_data = (struct NabuPlugin*)instance;
     struct NabuMonoModules* mm = &plugin_data->mono_modules;
     t_mf10_multi * f_fx;
     struct MIDIEvent* midi_event;
     struct MultiFX10MonoCluster* step;
     SGFLT splitter_input[2];
+    int split_mask = 0;
 
     t_seq_event **events = (t_seq_event**)midi_events->data;
     int event_count = midi_events->len;
@@ -242,8 +244,6 @@ void v_nabu_run(
     for(event_pos = 0; event_pos < event_count; ++event_pos){
         v_nabu_process_midi_event(plugin_data, events[event_pos]);
     }
-
-    int i, j;
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
 
@@ -340,21 +340,27 @@ void v_nabu_run(
                         mm->output.left += mm->splitter.output[j][0];
                         mm->output.right += mm->splitter.output[j][1];
                     } else {
+                        split_mask |= 1 << output;
                         mm->fx[output].input.left +=
                             mm->splitter.output[j][0];
                         mm->fx[output].input.right +=
                             mm->splitter.output[j][1];
                     }
                 }
-            } else {
-                step = mm->routing_plan.steps[0];
-                step->input.left = plugin_data->output0[i_mono_out];
-                step->input.right = plugin_data->output1[i_mono_out];
             }
 
             for(i = 0; i < mm->routing_plan.active_fx_count; ++i){
                 step = mm->routing_plan.steps[i];
                 f_fx = &step->mf10;
+
+                if(
+                    step->input_main
+                    &&
+                    !(split_mask & (1 << step->mf10_index))
+                ){
+                    step->input.left += plugin_data->output0[i_mono_out];
+                    step->input.right += plugin_data->output1[i_mono_out];
+                }
                 for(j = 0; j < step->meta.knob_count; ++j){
                     v_sml_run(
                         &step->smoothers[j],

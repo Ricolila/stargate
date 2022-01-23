@@ -91,6 +91,8 @@ struct MultiFX10MonoCluster {
     int fx_index;  // The index of the effect being used
     int mf10_index;  // The index of this effect within Nabu
     struct MultiFX10MetaData meta;
+    // 1 if this cluster should mix the main input into it's own
+    int input_main;
     struct SamplePair input;
     t_pkm_peak_meter input_peak;
     struct MultiFX10Controls controls;

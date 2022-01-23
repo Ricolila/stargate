@@ -255,11 +255,18 @@ int mf10_routing_plan_set(
     int i, index, route;
     struct MultiFX10MonoCluster* cluster;
     int result = 0;
-    int active_fx[MULTIFX10_MAX_FX_COUNT];
-    int routes[MULTIFX10_MAX_FX_COUNT];
+    int fx_num;
+    int active_fx[fx_count];
+    int routes[fx_count];
+    int routed_to[fx_count + 1];
+
+    for(i = 0; i < fx_count + 1; ++i){
+        routed_to[i] = 0;
+    }
+
     plan->active_fx_count = 0;
 
-    for(i = 0; i < MULTIFX10_MAX_FX_COUNT; ++i){
+    for(i = 0; i < fx_count; ++i){
         cluster = &fx[i];
         index = (int)(*(cluster->controls.type));
         cluster->fx_index = index;
@@ -268,6 +275,7 @@ int mf10_routing_plan_set(
         if(index){
             route = (int)(*(cluster->controls.route)) + i + 1;
             routes[plan->active_fx_count] = route;
+            routed_to[route] = 1;
             active_fx[i] = 1;
             result = 1;
             plan->steps[plan->active_fx_count] = cluster;
@@ -275,17 +283,24 @@ int mf10_routing_plan_set(
         } else {
             active_fx[i] = 0;
         }
+        // Because routing only goes forward, never backwards
+        if(routed_to[i]){
+            cluster->input_main = 0;
+        } else {
+            cluster->input_main = 1;
+        }
     }
 
     for(i = 0; i < plan->active_fx_count; ++i){
+        fx_num = routes[i];
         if(
-            routes[i] == fx_count
+            fx_num == fx_count
             ||
             active_fx[routes[i]] == 0
         ){
             plan->steps[i]->output = output;
         } else {
-            plan->steps[i]->output = &fx[routes[i]].input;
+            plan->steps[i]->output = &fx[fx_num].input;
         }
     }
     return result;
