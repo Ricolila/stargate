@@ -349,56 +349,56 @@ class MultiFX10:
             self.knobs[1].name_label.setText(_("Res"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-30.0, 0.0)
+            self.knobs[1].set_min_max(-30.0, 0.0)
         elif a_val == 2: #LP4
             self.hide_knobs(2)
             self.knobs[0].name_label.setText(_("Freq"))
             self.knobs[1].name_label.setText(_("Res"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-30.0, 0.0)
+            self.knobs[1].set_min_max(-30.0, 0.0)
         elif a_val == 3: #HP2
             self.hide_knobs(2)
             self.knobs[0].name_label.setText(_("Freq"))
             self.knobs[1].name_label.setText(_("Res"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-30.0, 0.0)
+            self.knobs[1].set_min_max(-30.0, 0.0)
         elif a_val == 4: #HP4
             self.hide_knobs(2)
             self.knobs[0].name_label.setText(_("Freq"))
             self.knobs[1].name_label.setText(_("Res"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-30.0, 0.0)
+            self.knobs[1].set_min_max(-30.0, 0.0)
         elif a_val == 5: #BP2
             self.hide_knobs(2)
             self.knobs[0].name_label.setText(_("Freq"))
             self.knobs[1].name_label.setText(_("Res"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-30.0, 0.0)
+            self.knobs[1].set_min_max(-30.0, 0.0)
         elif a_val == 6: #BP4
             self.hide_knobs(2)
             self.knobs[0].name_label.setText(_("Freq"))
             self.knobs[1].name_label.setText(_("Res"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-30.0, 0.0)
+            self.knobs[1].set_min_max(-30.0, 0.0)
         elif a_val == 7: #Notch2
             self.hide_knobs(2)
             self.knobs[0].name_label.setText(_("Freq"))
             self.knobs[1].name_label.setText(_("Res"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-30.0, 0.0)
+            self.knobs[1].set_min_max(-30.0, 0.0)
         elif a_val == 8: #Notch4
             self.hide_knobs(2)
             self.knobs[0].name_label.setText(_("Freq"))
             self.knobs[1].name_label.setText(_("Res"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-30.0, 0.0)
+            self.knobs[1].set_min_max(-30.0, 0.0)
         elif a_val == 9: #EQ
             self.hide_knobs(3)
             self.knobs[0].name_label.setText(_("Freq"))
@@ -406,9 +406,9 @@ class MultiFX10:
             self.knobs[2].name_label.setText(_("Gain"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(1.0, 6.0)
+            self.knobs[1].set_min_max(1.0, 6.0)
             self.knobs[2].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[2].set_127_min_max(-24.0, 24.0)
+            self.knobs[2].set_min_max(-24.0, 24.0)
             self.knobs[1].value_label.setText("")
         elif a_val == 10: #Distortion
             self.hide_knobs(3)
@@ -416,11 +416,11 @@ class MultiFX10:
             self.knobs[1].name_label.setText(_("D/W"))
             self.knobs[2].name_label.setText(_("Out"))
             self.knobs[0].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[0].set_127_min_max(0.0, 48.0)
+            self.knobs[0].set_min_max(0.0, 48.0)
             self.knobs[1].val_conversion = _shared.KC_NONE
             self.knobs[1].value_label.setText("")
             self.knobs[2].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[2].set_127_min_max(-30.0, 0.0)
+            self.knobs[2].set_min_max(-30.0, 0.0)
         elif a_val == 11: #Comb Filter
             self.hide_knobs(2)
             self.knobs[0].name_label.setText(_("Freq"))
@@ -435,7 +435,7 @@ class MultiFX10:
             self.knobs[1].name_label.setText(_("Amp"))
             self.knobs[0].val_conversion = _shared.KC_NONE
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-40.0, 24.0)
+            self.knobs[1].set_min_max(-40.0, 24.0)
             self.knobs[0].value_label.setText("")
             self.knobs[1].value_label.setText("")
         elif a_val == 13: #Limiter
@@ -444,22 +444,22 @@ class MultiFX10:
             self.knobs[1].name_label.setText(_("Ceil"))
             self.knobs[2].name_label.setText(_("Rel"))
             self.knobs[0].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[0].set_127_min_max(-30.0, 0.0)
+            self.knobs[0].set_min_max(-30.0, 0.0)
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-12.0, -0.1)
+            self.knobs[1].set_min_max(-12.0, -0.1)
             self.knobs[2].val_conversion = _shared.KC_127_ZERO_TO_X_INT
-            self.knobs[2].set_127_min_max(50.0, 1500.0)
+            self.knobs[2].set_min_max(50.0, 1500.0)
         elif a_val == 14: #Saturator
             self.hide_knobs(3)
             self.knobs[0].name_label.setText(_("Gain"))
             self.knobs[1].name_label.setText(_("Wet"))
             self.knobs[2].name_label.setText(_("Out"))
             self.knobs[0].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[0].set_127_min_max(-12.0, 12.0)
+            self.knobs[0].set_min_max(-12.0, 12.0)
             self.knobs[1].val_conversion = _shared.KC_NONE
             self.knobs[1].value_label.setText("")
             self.knobs[2].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[2].set_127_min_max(-12.0, 12.0)
+            self.knobs[2].set_min_max(-12.0, 12.0)
         elif a_val == 15: #Formant Filter
             self.hide_knobs(2)
             self.knobs[0].name_label.setText(_("Vowel"))
@@ -474,12 +474,12 @@ class MultiFX10:
             self.knobs[1].name_label.setText(_("Wet"))
             self.knobs[2].name_label.setText("Fine")
             self.knobs[0].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[0].set_127_min_max(0.3, 6.0)
+            self.knobs[0].set_min_max(0.3, 6.0)
             self.knobs[0].value_label.setText("")
             self.knobs[1].val_conversion = _shared.KC_NONE
             self.knobs[1].value_label.setText("")
             self.knobs[2].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[2].set_127_min_max(0.1, 1.9)
+            self.knobs[2].set_min_max(0.1, 1.9)
         elif a_val == 17: #Glitch
             self.hide_knobs(3)
             self.knobs[0].name_label.setText(_("Pitch"))
@@ -503,7 +503,7 @@ class MultiFX10:
             self.hide_knobs(1)
             self.knobs[0].name_label.setText(_("Bits"))
             self.knobs[0].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[0].set_127_min_max(4.0, 16.0)
+            self.knobs[0].set_min_max(4.0, 16.0)
         elif a_val == 20: #Sample and Hold
             self.hide_knobs(2)
             self.knobs[0].name_label.setText(_("Pitch"))
@@ -519,7 +519,7 @@ class MultiFX10:
             self.knobs[2].name_label.setText(_("Wet"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-30.0, 0.0)
+            self.knobs[1].set_min_max(-30.0, 0.0)
             self.knobs[2].val_conversion = _shared.KC_NONE
             self.knobs[2].value_label.setText("")
         elif a_val == 22: #HP2-Dry/Wet
@@ -529,7 +529,7 @@ class MultiFX10:
             self.knobs[2].name_label.setText(_("Wet"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-30.0, 0.0)
+            self.knobs[1].set_min_max(-30.0, 0.0)
             self.knobs[2].val_conversion = _shared.KC_NONE
             self.knobs[2].value_label.setText("")
         elif a_val == 23: #Monofier
@@ -538,7 +538,7 @@ class MultiFX10:
             self.knobs[1].name_label.setText(_("Amp"))
             self.knobs[0].val_conversion = _shared.KC_NONE
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-30.0, 6.0)
+            self.knobs[1].set_min_max(-30.0, 6.0)
             self.knobs[0].value_label.setText("")
             self.knobs[1].value_label.setText("")
         elif a_val == 24: #LP<-->HP
@@ -548,7 +548,7 @@ class MultiFX10:
             self.knobs[2].name_label.setText(("LP/HP"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-30.0, 0.0)
+            self.knobs[1].set_min_max(-30.0, 0.0)
             self.knobs[2].val_conversion = _shared.KC_NONE
             self.knobs[2].value_label.setText("")
         elif a_val == 25: #Growl Filter
@@ -568,7 +568,7 @@ class MultiFX10:
             self.knobs[1].name_label.setText(_("Res"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-30.0, 0.0)
+            self.knobs[1].set_min_max(-30.0, 0.0)
         elif a_val == 27: #Metal Comb
             self.hide_knobs(3)
             self.knobs[0].name_label.setText(_("Freq"))
@@ -587,7 +587,7 @@ class MultiFX10:
             self.knobs[2].name_label.setText(_("Wet"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-30.0, 0.0)
+            self.knobs[1].set_min_max(-30.0, 0.0)
             self.knobs[2].val_conversion = _shared.KC_NONE
             self.knobs[2].value_label.setText("")
         elif a_val == 29: #Foldback Distortion
@@ -596,9 +596,9 @@ class MultiFX10:
             self.knobs[1].name_label.setText(_("Gain"))
             self.knobs[2].name_label.setText(_("Wet"))
             self.knobs[0].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[0].set_127_min_max(-12.0, 0.0)
+            self.knobs[0].set_min_max(-12.0, 0.0)
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(0.0, 12.0)
+            self.knobs[1].set_min_max(0.0, 12.0)
             self.knobs[2].val_conversion = _shared.KC_NONE
             self.knobs[2].value_label.setText("")
         elif a_val == 30: #Notch Spread
@@ -607,11 +607,11 @@ class MultiFX10:
             self.knobs[1].name_label.setText(_("Res"))
             self.knobs[2].name_label.setText(_("Spread"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH_MIN_MAX
-            self.knobs[0].set_127_min_max(44.0, 100.0)
+            self.knobs[0].set_min_max(44.0, 100.0)
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-10.0, -1.0)
+            self.knobs[1].set_min_max(-10.0, -1.0)
             self.knobs[2].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[2].set_127_min_max(0.0, 36.0)
+            self.knobs[2].set_min_max(0.0, 36.0)
         elif a_val == 31: # DC Offset
             self.hide_knobs(0)
         elif a_val == 32: # BP Spread
@@ -620,11 +620,11 @@ class MultiFX10:
             self.knobs[1].name_label.setText(_("Res"))
             self.knobs[2].name_label.setText(_("Spread"))
             self.knobs[0].val_conversion = _shared.KC_127_PITCH_MIN_MAX
-            self.knobs[0].set_127_min_max(44.0, 100.0)
+            self.knobs[0].set_min_max(44.0, 100.0)
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(-10.0, -1.0)
+            self.knobs[1].set_min_max(-10.0, -1.0)
             self.knobs[2].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[2].set_127_min_max(0.0, 48.0)
+            self.knobs[2].set_min_max(0.0, 48.0)
         elif a_val == 33: # Phaser Static
             self.hide_knobs(3)
             self.knobs[0].name_label.setText(_("Freq"))
@@ -653,11 +653,11 @@ class MultiFX10:
             self.knobs[1].name_label.setText(_("Shape"))
             self.knobs[2].name_label.setText(_("Out"))
             self.knobs[0].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[0].set_127_min_max(-12.0, 0.0)
+            self.knobs[0].set_min_max(-12.0, 0.0)
             self.knobs[1].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[1].set_127_min_max(0.0, 2.0)
+            self.knobs[1].set_min_max(0.0, 2.0)
             self.knobs[2].val_conversion = _shared.KC_127_ZERO_TO_X
-            self.knobs[2].set_127_min_max(-12.0, 12.0)
+            self.knobs[2].set_min_max(-12.0, 12.0)
 
         for knob in self.knobs:
             knob.set_value(knob.control.value())

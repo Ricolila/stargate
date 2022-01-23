@@ -85,7 +85,9 @@ class AbstractUiControl(GridLayoutControl):
         max_text=None,
         text_lookup=None,  # Required to be a tuple if KC_TEXT
         value_multiplier=None,
+        control_res=128.,
     ):
+        self.control_res = control_res
         self.value_multiplier = value_multiplier
         self.min_text = min_text
         self.max_text = max_text
@@ -133,11 +135,11 @@ class AbstractUiControl(GridLayoutControl):
     def get_value(self):
         return self.control.value()
 
-    def set_127_min_max(self, a_min, a_max):
-        self.min_label_value_127 = a_min;
-        self.max_label_value_127 = a_max;
-        self.label_value_127_add_to = 0.0 - a_min;
-        self.label_value_127_multiply_by = ((a_max - a_min) / 127.0);
+    def set_min_max(self, a_min, a_max):
+        self._min = a_min;
+        self._max = a_max;
+        self._add = 0.0 - a_min;
+        self._mult = ((a_max - a_min) / self.control_res);
 
     def add_undo_history(self, value):
         self.undo_history.append(value)
@@ -204,26 +206,18 @@ class AbstractUiControl(GridLayoutControl):
                 f_val = str(round(f_val * 0.001, 1)) + "k"
             return (str(f_val))
         elif self.val_conversion == _shared.KC_127_PITCH_MIN_MAX:
-            mult = (
-                self.max_label_value_127 - self.min_label_value_127
-            ) / 128.
-            LOG.info(f"{self.max_label_value_127} {self.min_label_value_127}")
-            pitch = (f_value * mult) + self.min_label_value_127
+            mult = (self._max - self._min) / self.control_res
+            pitch = (f_value * mult) + self._min
             f_val = int(pitch_to_hz(pitch))
-            LOG.info(f"{f_value} {f_val} {pitch} {mult}")
             if f_val >= 1000:
                 f_val = str(round(f_val * 0.001, 1)) + "k"
             return str(f_val)
         elif self.val_conversion == _shared.KC_127_ZERO_TO_X:
-            f_dec_value = (float(f_value) *
-                self.label_value_127_multiply_by) - \
-                self.label_value_127_add_to
+            f_dec_value = (float(f_value) * self._mult) - self._add
             f_dec_value = ((int)(f_dec_value * 10.0)) * 0.1
             return str(round(f_dec_value, 2))
         elif self.val_conversion == _shared.KC_127_ZERO_TO_X_INT:
-            f_dec_value = (float(f_value) *
-                self.label_value_127_multiply_by) - \
-                self.label_value_127_add_to
+            f_dec_value = (float(f_value) * self._mult) - self._add
             return str(int(f_dec_value))
         elif self.val_conversion == _shared.KC_LOG_TIME:
             f_dec_value = float(f_value) * 0.01
