@@ -540,11 +540,12 @@ void v_mf10_run_dist(
     SGFLT a_in0,
     SGFLT a_in1
 ){
+    SGFLT outgain;
     v_mf10_commit_mod(self);
     self->control_value[0] = ((self->control[0]) * 0.377952756f);
     self->control_value[1] = ((self->control[1]) * 0.007874016f);
     self->control_value[2] = (((self->control[2]) * 0.236220472f) - 30.0f);
-    self->outgain = f_db_to_linear(self->control_value[2]);
+    outgain = f_db_to_linear(self->control_value[2]);
     v_clp_set_in_gain(&self->clipper, (self->control_value[0]));
     v_axf_set_xfade(&self->xfader, (self->control_value[1]));
 
@@ -552,12 +553,12 @@ void v_mf10_run_dist(
         &self->xfader,
         a_in0,
         f_clp_clip(&self->clipper, a_in0)
-    ) * self->outgain;
+    ) * outgain;
     self->output1 = f_axf_run_xfade(
         &self->xfader,
         a_in1,
         f_clp_clip(&self->clipper, a_in1)
-    ) * self->outgain;
+    ) * outgain;
 }
 
 void v_mf10_run_soft_clipper(
@@ -1139,8 +1140,6 @@ void g_mf10_init(
         f_result->control_value[i] = 64.0f;
         f_result->mod_value[i] = 0.0f;
     }
-    f_result->effect_index = 0;
-    f_result->channels = 2;
     g_svf2_init(&f_result->svf, a_sample_rate);
     g_svf2_init(&f_result->svf2, a_sample_rate);
     g_cmb_init(&f_result->comb_filter0, a_sample_rate, a_huge_pages);
@@ -1152,7 +1151,6 @@ void g_mf10_init(
     f_result->output0 = 0.0f;
     f_result->output1 = 0.0f;
     g_axf_init(&f_result->xfader, -3.0f);
-    f_result->outgain = 1.0f;
     g_app_init(&f_result->amp_and_panner);
     g_sat_init(&f_result->saturator);
     g_for_init(&f_result->formant_filter, a_sample_rate);

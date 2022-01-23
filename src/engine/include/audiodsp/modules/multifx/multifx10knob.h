@@ -14,7 +14,6 @@ GNU General Public License for more details.
 #ifndef MULTIFX10KNOB_H
 #define MULTIFX10KNOB_H
 
-/*This is actually count, not index TODO:  Rename*/
 #define MULTIFX10KNOB_FX_COUNT 36
 #define MULTIFX10KNOB_KNOB_COUNT 10
 #define MULTIFX10_MAX_FX_COUNT 12
@@ -44,8 +43,6 @@ GNU General Public License for more details.
 /*BIG TODO:  Add a function to modify for the modulation sources*/
 
 typedef struct {
-    int effect_index;
-    int channels;  //Currently only 1 or 2 are supported
     t_svf2_filter svf;
     t_svf2_filter svf2;
     t_comb_filter comb_filter0;
@@ -60,7 +57,6 @@ typedef struct {
     SGFLT mod_value[MULTIFX10KNOB_KNOB_COUNT];
     t_audio_xfade xfader;
     t_amp_and_panner amp_and_panner;
-    SGFLT outgain;  //For anything with an outgain knob
     t_for_formant_filter formant_filter;
     t_crs_chorus chorus;
     t_glc_glitch glitch;

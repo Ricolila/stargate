@@ -31,7 +31,7 @@ MULTIFX10_INFO = {
     "Limiter": MultiFX10Info(13),
     "Saturator": MultiFX10Info(14),
     "Formant": MultiFX10Info(15),
-    "Chorus": MultiFX10Info(16),
+    "Stereo Chorus": MultiFX10Info(16),
     "Glitch": MultiFX10Info(17),
     "RingMod": MultiFX10Info(18),
     "LoFi": MultiFX10Info(19),
@@ -87,7 +87,7 @@ MULTIFX10_DISTORTION = [
 ]
 
 MULTIFX10_DELAY = [
-    "Chorus",
+    "Stereo Chorus",
     "Comb Filter",
     "Flanger Static",
     "Metal Comb",
@@ -468,7 +468,7 @@ class MultiFX10:
             self.knobs[0].value_label.setText("")
             self.knobs[1].val_conversion = _shared.KC_NONE
             self.knobs[1].value_label.setText("")
-        elif a_val == 16: #Chorus
+        elif a_val == 16: #Stereo Chorus
             self.hide_knobs(3)
             self.knobs[0].name_label.setText(_("Rate"))
             self.knobs[1].name_label.setText(_("Wet"))
