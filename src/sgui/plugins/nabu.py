@@ -26,7 +26,7 @@ def _port_map():
     port = NABU_FIRST_CONTROL_PORT
     for i in range(NABU_FX_COUNT):
         for j in range(10):
-            port_map[f"FX{i + 1} Knob{j + 1}"] = port
+            port_map[f"FX{i + 1:02} Knob{j + 1:02}"] = port
             port += 1
         port += 5
     return port_map
