@@ -441,7 +441,7 @@ PluginDescriptor* nabu_plugin_descriptor(){
     port = NABU_FIRST_CONTROL_PORT;
     for(i = 0; i < MULTIFX10_MAX_FX_COUNT; ++i){
         for(j = 0; j < 10; ++j){
-            set_plugin_port(f_result, port, 64.0f, 0.0f, 127.0f);
+            set_plugin_port(f_result, port, 640.0f, 0.0f, 1270.0f);
             ++port;
         }
         set_plugin_port(
