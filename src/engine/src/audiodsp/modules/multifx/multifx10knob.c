@@ -248,28 +248,29 @@ void v_mf10_set_from_smoothers(
 
 int mf10_routing_plan_set(
     struct MultiFX10RoutingPlan* plan,
-    struct MultiFX10Controls* controls,
     struct MultiFX10MonoCluster* fx,
     struct SamplePair* output,
     int fx_count
 ){
     int i, index, route;
+    struct MultiFX10MonoCluster* cluster;
     int result = 0;
     int active_fx[MULTIFX10_MAX_FX_COUNT];
     int routes[MULTIFX10_MAX_FX_COUNT];
     plan->active_fx_count = 0;
 
     for(i = 0; i < MULTIFX10_MAX_FX_COUNT; ++i){
-        index = (int)(*(controls[i].type));
-        route = (int)(*(controls[i].route)) + i + 1;
-        fx[i].fx_index = index;
-        fx[i].meta = mf10_get_meta(index);
-        routes[i] = route;
+        cluster = &fx[i];
+        index = (int)(*(cluster->controls.type));
+        cluster->fx_index = index;
+        cluster->meta = mf10_get_meta(index);
 
         if(index){
+            route = (int)(*(cluster->controls.route)) + i + 1;
+            routes[plan->active_fx_count] = route;
             active_fx[i] = 1;
             result = 1;
-            plan->steps[plan->active_fx_count] = &fx[i];
+            plan->steps[plan->active_fx_count] = cluster;
             ++plan->active_fx_count;
         } else {
             active_fx[i] = 0;

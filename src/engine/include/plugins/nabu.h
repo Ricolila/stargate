@@ -67,7 +67,6 @@ struct NabuPlugin {
     PluginData *output1;
 
     struct FreqSplitterControls splitter_controls;
-    struct MultiFX10Controls controls[MULTIFX10_MAX_FX_COUNT];
     PluginData* ui_msg_enabled;
 
     SGFLT fs;

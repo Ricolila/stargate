@@ -82,12 +82,22 @@ struct MultiFX10MetaData {
     int knob_count;
 };
 
+struct MultiFX10Controls {
+    PluginData* knobs[MULTIFX10KNOB_KNOB_COUNT];
+    PluginData* dry;
+    PluginData* wet;
+    PluginData* pan;
+    PluginData* type;
+    PluginData* route;
+};
+
 struct MultiFX10MonoCluster {
     int fx_index;  // The index of the effect being used
     int mf10_index;  // The index of this effect within Nabu
     struct MultiFX10MetaData meta;
     struct SamplePair input;
     t_pkm_peak_meter input_peak;
+    struct MultiFX10Controls controls;
     t_smoother_linear smoothers[MULTIFX10KNOB_KNOB_COUNT];
     t_mf10_multi mf10;
     struct DryWetPan dry_wet_pan;
@@ -98,15 +108,6 @@ struct MultiFX10MonoCluster {
 struct MultiFX10RoutingPlan {
     int active_fx_count;
     struct MultiFX10MonoCluster* steps[MULTIFX10_MAX_FX_COUNT];
-};
-
-struct MultiFX10Controls {
-    PluginData* knobs[MULTIFX10KNOB_KNOB_COUNT];
-    PluginData* dry;
-    PluginData* wet;
-    PluginData* pan;
-    PluginData* type;
-    PluginData* route;
 };
 
 void v_mf10_set(
@@ -179,7 +180,6 @@ void g_mf10_init(
 );
 int mf10_routing_plan_set(
     struct MultiFX10RoutingPlan* plan,
-    struct MultiFX10Controls* controls,
     struct MultiFX10MonoCluster* fx,
     struct SamplePair* output,
     int fx_count

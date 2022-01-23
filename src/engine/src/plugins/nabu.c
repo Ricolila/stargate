@@ -63,23 +63,26 @@ void v_nabu_connect_port(
 ){
     struct NabuPlugin* plugin = (struct NabuPlugin*)instance;
     int fx_num, fx_port, norm_port;
+    struct NabuMonoModules* mm = &plugin->mono_modules;
+    struct MultiFX10Controls* controls;
 
     if(port >= NABU_FIRST_CONTROL_PORT && port <= NABU_LAST_CONTROL_PORT){
         norm_port = (port - NABU_FIRST_CONTROL_PORT);
         fx_num = norm_port / NABU_CONTROLS_PER_FX;
         fx_port = norm_port % NABU_CONTROLS_PER_FX;
+        controls = &mm->fx[fx_num].controls;
         if(fx_port < MULTIFX10KNOB_KNOB_COUNT){
-            plugin->controls[fx_num].knobs[fx_port] = data;
+            controls->knobs[fx_port] = data;
         } else if(fx_port == 10){
-            plugin->controls[fx_num].route = data;
+            controls->route = data;
         } else if(fx_port == 11){
-            plugin->controls[fx_num].type = data;
+            controls->type = data;
         } else if(fx_port == 12){
-            plugin->controls[fx_num].dry = data;
+            controls->dry = data;
         } else if(fx_port == 13){
-            plugin->controls[fx_num].wet = data;
+            controls->wet = data;
         } else if(fx_port == 14){
-            plugin->controls[fx_num].pan = data;
+            controls->pan = data;
         } else {
             sg_abort("Nabu: Port %i has invalid fx_port: %i", port, fx_port);
         }
@@ -200,7 +203,6 @@ void v_nabu_process_midi_event(
         if(!plugin_data->is_on){
             plugin_data->is_on = mf10_routing_plan_set(
                 &plugin_data->mono_modules.routing_plan,
-                plugin_data->controls,
                 plugin_data->mono_modules.fx,
                 &plugin_data->mono_modules.output,
                 MULTIFX10_MAX_FX_COUNT
@@ -261,7 +263,6 @@ void v_nabu_run(
         plugin_data->i_slow_index -= NABU_SLOW_INDEX_ITERATIONS;
         plugin_data->is_on = mf10_routing_plan_set(
             &plugin_data->mono_modules.routing_plan,
-            plugin_data->controls,
             plugin_data->mono_modules.fx,
             &plugin_data->mono_modules.output,
             MULTIFX10_MAX_FX_COUNT
@@ -290,9 +291,9 @@ void v_nabu_run(
             step = mm->routing_plan.steps[i];
             dry_wet_pan_set(
                 &step->dry_wet_pan,
-                (*plugin_data->controls[step->mf10_index].dry) * 0.1,
-                (*plugin_data->controls[step->mf10_index].wet) * 0.1,
-                (*plugin_data->controls[step->mf10_index].pan) * 0.01
+                (*step->controls.dry) * 0.1,
+                (*step->controls.wet) * 0.1,
+                (*step->controls.pan) * 0.01
             );
         }
 
@@ -357,7 +358,7 @@ void v_nabu_run(
                 for(j = 0; j < step->meta.knob_count; ++j){
                     v_sml_run(
                         &step->smoothers[j],
-                        *plugin_data->controls[step->mf10_index].knobs[j]
+                        *step->controls.knobs[j]
                     );
                 }
 
@@ -411,7 +412,7 @@ void v_nabu_run(
             );
             ptr += count;
             for(i = 0; i < MULTIFX10_MAX_FX_COUNT; ++i){
-                if((int)*plugin_data->controls[i].type != 0){
+                if((int)(*mm->fx[i].controls.type) != 0){
                     count = sprintf(
                         ptr,
                         "|%i:%f:%f:%f:%f",
