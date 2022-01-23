@@ -189,9 +189,9 @@ class NabuPluginUI(AbstractPluginUI):
         self.peak_meters = []
         peak_gradient = QLinearGradient(0., 0., 0., 100.)
         peak_gradient.setColorAt(0.0, QColor("#cc2222"))
-        peak_gradient.setColorAt(0.3, QColor("#cc2222"))
-        peak_gradient.setColorAt(0.6, QColor("#8877bb"))
-        peak_gradient.setColorAt(1.0, QColor("#7777cc"))
+        peak_gradient.setColorAt(0.09, QColor("#cc2222"))
+        peak_gradient.setColorAt(0.1, QColor("#22cc22"))
+        peak_gradient.setColorAt(1.0, QColor("#22cc22"))
 
         f_port = 4
         for i in range(NABU_FX_COUNT):
