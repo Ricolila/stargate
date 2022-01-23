@@ -231,7 +231,7 @@ class MultiFX10:
         knob_kwargs['arc_type'] = ArcType.BIDIRECTIONAL
         self.pan_knob = knob_control(
             a_knob_size,
-            "Pan",
+            "D/W Pan",
             a_port_k1 + 14,
             a_rel_callback,
             a_val_callback,
