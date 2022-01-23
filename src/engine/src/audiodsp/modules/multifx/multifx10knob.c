@@ -320,34 +320,17 @@ void v_mf10_mod_single(
 }
 
 void v_mf10_commit_mod(t_mf10_multi* self){
-    self->control[0] = (self->control[0]) + ((self->mod_value[0]) * 127.0f);
+    int i;
 
-    if((self->control[0]) > 127.0f){
-        self->control[0] = 127.0f;
-    }
+    for(i = 0; i < MULTIFX10KNOB_KNOB_COUNT; ++i){
+        self->control[i] =
+            self->control[i] + (self->mod_value[i] * 127.0f);
 
-    if((self->control[0]) < 0.0f){
-        self->control[0] = 0.0f;
-    }
-
-    self->control[1] = (self->control[1]) + ((self->mod_value[1]) * 127.0f);
-
-    if((self->control[1]) > 127.0f){
-        self->control[1] = 127.0f;
-    }
-
-    if((self->control[1]) < 0.0f){
-        self->control[1] = 0.0f;
-    }
-
-    self->control[2] = (self->control[2]) + ((self->mod_value[2]) * 127.0f);
-
-    if((self->control[2]) > 127.0f){
-        self->control[2] = 127.0f;
-    }
-
-    if((self->control[2]) < 0.0f){
-        self->control[2] = 0.0f;
+        if(self->control[i] > 127.0f){
+            self->control[i] = 127.0f;
+        } else if(self->control[i] < 0.0f){
+            self->control[i] = 0.0f;
+        }
     }
 }
 
@@ -1149,6 +1132,13 @@ void g_mf10_init(
     SGFLT a_sample_rate,
     int a_huge_pages
 ){
+    int i;
+
+    for(i = 0; i < MULTIFX10KNOB_KNOB_COUNT; ++i){
+        f_result->control[i] = 0.0f;
+        f_result->control_value[i] = 64.0f;
+        f_result->mod_value[i] = 0.0f;
+    }
     f_result->effect_index = 0;
     f_result->channels = 2;
     g_svf2_init(&f_result->svf, a_sample_rate);
@@ -1161,15 +1151,6 @@ void g_mf10_init(
     g_lim_init(&f_result->limiter, a_sample_rate, a_huge_pages);
     f_result->output0 = 0.0f;
     f_result->output1 = 0.0f;
-    f_result->control[0] = 0.0f;
-    f_result->control[1] = 0.0f;
-    f_result->control[2] = 0.0f;
-    f_result->control_value[0] = 65.0f;
-    f_result->control_value[1] = 65.0f;
-    f_result->control_value[2] = 65.0f;
-    f_result->mod_value[0] = 0.0f;
-    f_result->mod_value[1] = 0.0f;
-    f_result->mod_value[2] = 0.0f;
     g_axf_init(&f_result->xfader, -3.0f);
     f_result->outgain = 1.0f;
     g_app_init(&f_result->amp_and_panner);
