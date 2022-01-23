@@ -1201,13 +1201,7 @@ void mf10_mono_cluster_init(
     g_pkm_init(&self->input_peak);
     g_pkm_init(&self->output_peak);
     for(i = 0; i < MULTIFX10KNOB_KNOB_COUNT; ++i){
-        g_sml_init(
-            &self->smoothers[i],
-            sr,
-            1270.0f,
-            0.0f,
-            0.1f
-        );
+        g_sml_init(&self->smoothers[i], sr, 1270.0f, 0.0f, 0.05f);
     }
 }
 
