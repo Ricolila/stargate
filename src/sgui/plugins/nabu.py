@@ -140,6 +140,7 @@ class NabuPluginUI(AbstractPluginUI):
         self.presets_hlayout.addItem(
             QSpacerItem(1, 1, QSizePolicy.Policy.Expanding),
         )
+        self.layout.addLayout(self.presets_hlayout)
         self.ui_msg_enabled = null_control(
             NABU_UI_MSG_ENABLED_PORT,
             self.plugin_rel_callback,
