@@ -21,6 +21,14 @@ NABU_FIRST_CONTROL_PORT = 4
 NABU_FIRST_FREQ_SPLITTER_PORT = NABU_FIRST_CONTROL_PORT + (NABU_FX_COUNT * 15)
 NABU_UI_MSG_ENABLED_PORT = 194
 
+ROUTE_TOOLTIP = """\
+If an effect in on, but is not routed to by a splitter or another effect that
+is on, it will process the plugin input.  Use this for parallel processing.
+
+If an effect is routed to an effect that is off, the effect will be routed to
+"output" instead.
+"""
+
 def _port_map():
     port_map = {}
     port = NABU_FIRST_CONTROL_PORT
@@ -208,6 +216,7 @@ class NabuPluginUI(AbstractPluginUI):
                 knob_kwargs=knob_kwargs,
                 fixed_height=True,
             )
+            f_effect.route_combobox.control.setToolTip(ROUTE_TOOLTIP)
             peak_meters = (
                 peak_meter(16, False, brush=peak_gradient),
                 peak_meter(16, False, brush=peak_gradient),
