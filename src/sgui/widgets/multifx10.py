@@ -211,6 +211,7 @@ class MultiFX10:
             min_text='-inf',
             a_val_conversion=_shared.KC_TENTH,
         )
+        self.dry_knob.hide()
         self.dry_knob.add_to_grid_layout(self.layout, 2)
         self.wet_knob = knob_control(
             a_knob_size,
@@ -227,6 +228,7 @@ class MultiFX10:
             min_text='-inf',
             a_val_conversion=_shared.KC_TENTH,
         )
+        self.wet_knob.hide()
         self.wet_knob.add_to_grid_layout(self.layout, 3)
         knob_kwargs['arc_type'] = ArcType.BIDIRECTIONAL
         self.pan_knob = knob_control(
@@ -244,6 +246,7 @@ class MultiFX10:
             a_val_conversion=_shared.KC_DECIMAL,
         )
         knob_kwargs.pop('arc_type')
+        self.pan_knob.hide()
         self.pan_knob.add_to_grid_layout(self.layout, 4)
 
     def wheel_event(self, a_event=None):
