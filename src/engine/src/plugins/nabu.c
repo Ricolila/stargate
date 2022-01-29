@@ -469,9 +469,9 @@ PluginDescriptor* nabu_plugin_descriptor(){
         set_plugin_port(
             f_result,
             port,  // Dry
-            0.0f,
             -400.0,
-            120.
+            -400.0,
+            120.0
         );
         ++port;
         set_plugin_port(
